@@ -31,5 +31,5 @@ func DeleteUser(c echo.Context) error {
 
 func GetAllUsers(c echo.Context) error {
 	repository.SelectAll()
-	return c.JSON(http.StatusOK, repository.People)
+	return c.JSON(http.StatusOK, repository.Persons)
 }

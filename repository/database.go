@@ -17,6 +17,8 @@ var (
 	People      []*Person
 	databaseUrl = ""
 	Conn, _     = pgxpool.Connect(context.Background(), os.Getenv(databaseUrl))
+
+	Persons = []Person{}
 )
 
 func Create() error {
@@ -32,7 +34,6 @@ func Create() error {
 
 func SelectAll() {
 	rows, _ := Conn.Query(context.Background(), "select * from person")
-	persons := []Person{}
 
 	for rows.Next() {
 		p := Person{}
@@ -41,9 +42,9 @@ func SelectAll() {
 			fmt.Println(err)
 			continue
 		}
-		persons = append(persons, p)
+		Persons = append(Persons, p)
 	}
-	for _, p := range persons {
+	/*for _, p := range Persons {
 		fmt.Println(p.ID, p.Name, p.Works)
-	}
+	}*/
 }
