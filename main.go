@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -14,8 +18,10 @@ type person struct {
 }
 
 var (
-	users = map[int]*person{}
-	seq   = 1
+	users       = map[int]*person{}
+	seq         = 1
+	databaseUrl = ""
+	conn, err   = pgxpool.Connect(context.Background(), os.Getenv(databaseUrl))
 )
 
 func createUser(c echo.Context) error {
@@ -53,10 +59,31 @@ func deleteUser(c echo.Context) error {
 }
 
 func getAllUsers(c echo.Context) error {
-	return c.JSON(http.StatusOK, users)
+	var u = new(person)
+	row, err2 := conn.Query(context.Background(), "Select * from person")
+	if err2 != nil {
+		log.Fatal("error")
+	}
+	for row.Next() {
+		u = new(person)
+		values, err := row.Values()
+		if err != nil {
+			log.Fatal("error")
+		}
+		u.ID = int(values[0].(int32))
+		u.Name = values[1].(string)
+		u.Works = values[2].(bool)
+	}
+	return c.JSON(http.StatusOK, u)
 }
 
 func main() {
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer conn.Close()
 
 	e := echo.New()
 
@@ -67,7 +94,7 @@ func main() {
 	e.PUT("/users/:id", updateUser)
 	e.DELETE("/users/:id", deleteUser)
 	// Start server
-	err := e.Start(":8000")
+	err := e.Start(":8080")
 	if err != nil {
 		fmt.Println(err)
 	}
