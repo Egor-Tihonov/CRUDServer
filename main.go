@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -21,8 +22,7 @@ func createUser(c echo.Context) error {
 	u := &person{
 		ID: seq,
 	}
-	err := c.Bind(u)
-	if err != nil {
+	if err := c.Bind(u); err != nil {
 		return err
 	}
 	users[u.ID] = u
@@ -57,6 +57,7 @@ func getAllUsers(c echo.Context) error {
 }
 
 func main() {
+
 	e := echo.New()
 
 	// Routes
@@ -66,5 +67,8 @@ func main() {
 	e.PUT("/users/:id", updateUser)
 	e.DELETE("/users/:id", deleteUser)
 	// Start server
-	e.Start(":8000")
+	err := e.Start(":8000")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
