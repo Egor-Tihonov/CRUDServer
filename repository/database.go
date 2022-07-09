@@ -22,7 +22,7 @@ var (
 	Persons = []Person{}
 )
 
-func Create() error {
+func CreateUser() error {
 	//u := new(Person)
 	name := "Anton"
 	works := true
@@ -33,7 +33,7 @@ func Create() error {
 	return err
 }
 
-func SelectAll() error {
+func SelectAllUsers() error {
 	rows, err := Conn.Query(context.Background(), "select * from person")
 
 	for rows.Next() {
@@ -48,5 +48,10 @@ func SelectAll() error {
 	/*for _, p := range Persons {
 		fmt.Println(p.ID, p.Name, p.Works)
 	}*/
+	return err
+}
+
+func DeleteUser(id int) error {
+	_, err := Conn.Exec(context.Background(), "delete from person where id=$1", id)
 	return err
 }
