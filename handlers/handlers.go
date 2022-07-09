@@ -2,13 +2,17 @@ package handlers
 
 import (
 	"awesomeProject/repository"
-	"github.com/labstack/echo/v4"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 func CreateUser(c echo.Context) error {
 	err := repository.Create()
-	return c.JSON(http.StatusOK, err)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, nil)
 }
 
 /*
@@ -30,6 +34,9 @@ func DeleteUser(c echo.Context) error {
 }*/
 
 func GetAllUsers(c echo.Context) error {
-	repository.SelectAll()
+	err := repository.SelectAll()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
 	return c.JSON(http.StatusOK, repository.Persons)
 }
