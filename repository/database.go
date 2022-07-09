@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"os"
+
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type Person struct {
@@ -32,8 +33,8 @@ func Create() error {
 	return err
 }
 
-func SelectAll() {
-	rows, _ := Conn.Query(context.Background(), "select * from person")
+func SelectAll() error {
+	rows, err := Conn.Query(context.Background(), "select * from person")
 
 	for rows.Next() {
 		p := Person{}
@@ -47,4 +48,5 @@ func SelectAll() {
 	/*for _, p := range Persons {
 		fmt.Println(p.ID, p.Name, p.Works)
 	}*/
+	return err
 }
