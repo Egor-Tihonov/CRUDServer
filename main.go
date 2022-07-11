@@ -1,23 +1,32 @@
 package main
 
 import (
-	"awesomeProject/handlers"
-	"awesomeProject/repository"
+	"awesomeProject/internal/handlers"
+	"awesomeProject/internal/repository"
+	"context"
 	"fmt"
-
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
+	"log"
 )
 
 func main() {
-	defer repository.Conn.Close()
+	pool, err := pgxpool.Connect(context.Background(), "postgresql://postgres:123@localhost:5432/person")
+	if err != nil {
+		log.Fatal("unable to connect ", err)
+	}
 
+	rps := repository.New(pool)
+	defer pool.Close()
+	h := handlers.NewHandler(rps)
 	e := echo.New()
 
-	e.GET("/users", handlers.GetAllUsers)
-	e.GET("/usersCreate", handlers.CreateUser)
-	e.PUT("/users/:id", handlers.UpdateUser)
-	e.DELETE("/users/:id", handlers.DeleteUser)
-	err := e.Start(":8080")
+	e.GET("/users", h.GetAllUsers)
+	e.GET("/usersCreate", h.CreateUser)
+	e.GET("/usersUpdate/:id", h.UpdateUser)
+	e.GET("/usersDelete/:id", h.DeleteUser)
+	e.GET("/users/:id", h.GetUserById)
+	err = e.Start(":8080")
 	if err != nil {
 		fmt.Println(err)
 	}
