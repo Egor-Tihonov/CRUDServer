@@ -3,9 +3,10 @@ package handlers
 import (
 	"awesomeProject/internal/model"
 	"awesomeProject/internal/repository"
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
+
+	"github.com/labstack/echo/v4"
 )
 
 type Handler struct {
@@ -31,7 +32,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK /*???*/, h.rps.SelectAll() /*???*/)
+	return c.JSON(http.StatusOK, "Successfully update")
 }
 
 func (h *Handler) DeleteUser(c echo.Context) error {
@@ -41,7 +42,7 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, h.rps.SelectAll())
+	return c.JSON(http.StatusOK, "Successfully delete")
 }
 
 func (h *Handler) GetAllUsers(c echo.Context) error {
