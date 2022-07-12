@@ -4,8 +4,9 @@ import (
 	"awesomeProject/internal/model"
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
+
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type Repository struct {
@@ -18,7 +19,7 @@ func New(pool *pgxpool.Pool) *Repository {
 
 func (r *Repository) Create(ctx context.Context, person *model.Person) error {
 	//u := new(Person)
-	person.Name = "Anton"
+	person.Name = "Egor"
 	person.Works = true
 	_, err := r.pool.Exec(ctx, "insert into persons(name,works) values($1,$2)", person.Name, person.Works)
 	if err != nil {
