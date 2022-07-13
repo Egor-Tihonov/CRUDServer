@@ -23,9 +23,9 @@ func main() {
 	e := echo.New()
 
 	e.GET("/users", h.GetAllUsers)
-	e.GET("/usersCreate", h.CreateUser)
-	e.GET("/usersUpdate/:id", h.UpdateUser)
-	e.GET("/usersDelete/:id", h.DeleteUser)
+	e.POST("/usersCreate", h.CreateUser)
+	e.PUT("/usersUpdate/:id", h.UpdateUser)
+	e.DELETE("/usersDelete/:id", h.DeleteUser)
 	e.GET("/users/:id", h.GetUserById)
 	err = e.Start(":8080")
 	if err != nil {
