@@ -17,12 +17,9 @@ func New(pool *pgxpool.Pool) *Repository {
 }
 
 func (r *Repository) Create(ctx context.Context, person *model.Person) error {
-	//u := new(Person)
-	person.Name = "Egor"
-	person.Works = true
 	_, err := r.pool.Exec(ctx, "insert into persons(name,works) values($1,$2)", person.Name, person.Works)
 	if err != nil {
-		_ = fmt.Errorf("error: %v", err)
+		err = fmt.Errorf("error: %v", err)
 	}
 	return err
 }
@@ -32,19 +29,19 @@ func (r *Repository) SelectAll() []*model.Person {
 
 	rows, err := r.pool.Query(context.Background(), "select id,name,works from persons")
 	if err != nil {
-		_ = fmt.Errorf("error: %v", err)
+		err = fmt.Errorf("error: %v", err)
 	}
-
+	defer rows.Close()
 	for rows.Next() {
 		p := model.Person{}
 		err := rows.Scan(&p.ID, &p.Name, &p.Works)
-		defer rows.Close()
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
 		persons = append(persons, &p)
 	}
+
 	return persons
 }
 
@@ -58,20 +55,19 @@ func (r *Repository) Update(id int) error {
 	_, err := r.pool.Exec(context.Background(), "update persons set name=$1 where id=$2", name, id)
 	return err
 }
-func (r *Repository) SelectById(id int) []*model.Person {
-	var persons []*model.Person
+func (r *Repository) SelectById(id int) model.Person {
+	p := model.Person{}
 	var name string
 	var works bool
 	err := r.pool.QueryRow(context.Background(), "select id,name,works from persons where id=$1", id).Scan(&id, &name, &works)
 	if err != nil {
-		return nil
+		return p
 	}
-	p := model.Person{
+	p = model.Person{
 		ID:    id,
 		Name:  name,
 		Works: works,
 	}
-	persons = append(persons, &p)
 
-	return persons
+	return p
 }
