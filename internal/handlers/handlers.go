@@ -3,6 +3,7 @@ package handlers
 import (
 	"awesomeProject/internal/model"
 	"awesomeProject/internal/repository"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -17,9 +18,13 @@ func NewHandler(rps *repository.Repository) *Handler {
 	return &Handler{rps: rps}
 }
 
-func (h *Handler) CreateUser(c echo.Context) error {
+func (h *Handler) CreateUser(c echo.Context) error { //
 	person := model.Person{}
-	err := h.rps.Create(c.Request().Context(), &person)
+	err := json.NewDecoder(c.Request().Body).Decode(&person)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	err = h.rps.Create(c.Request().Context(), &person)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
@@ -27,8 +32,13 @@ func (h *Handler) CreateUser(c echo.Context) error {
 }
 
 func (h *Handler) UpdateUser(c echo.Context) error {
+	person := model.Person{}
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := h.rps.Update(id)
+	err := json.NewDecoder(c.Request().Body).Decode(&person)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	err = h.rps.Update(id, &person)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}

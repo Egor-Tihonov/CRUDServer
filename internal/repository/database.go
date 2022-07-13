@@ -17,7 +17,7 @@ func New(pool *pgxpool.Pool) *Repository {
 }
 
 func (r *Repository) Create(ctx context.Context, person *model.Person) error {
-	_, err := r.pool.Exec(ctx, "insert into persons(name,works) values($1,$2)", person.Name, person.Works)
+	_, err := r.pool.Exec(ctx, "insert into persons(name,works) values($1,$2)", &person.Name, &person.Works)
 	if err != nil {
 		err = fmt.Errorf("database error with create user: %v", err)
 	}
@@ -50,12 +50,11 @@ func (r *Repository) Delete(ctx context.Context, id int) error {
 	if err != nil {
 		return fmt.Errorf("error with delete user %v", err)
 	}
-	return err
+	return nil
 }
 
-func (r *Repository) Update(id int) error {
-	p := model.Person{}
-	_, err := r.pool.Exec(context.Background(), "update persons set name=$1 where id=$2", p.Name, id)
+func (r *Repository) Update(id int, person *model.Person) error {
+	_, err := r.pool.Exec(context.Background(), "update persons set name=$1 where id=$2", person.Name, id)
 	if err != nil {
 		return fmt.Errorf("error with update user %v", err)
 	}
@@ -63,12 +62,9 @@ func (r *Repository) Update(id int) error {
 }
 func (r *Repository) SelectById(id int) (model.Person, error) {
 	p := model.Person{}
-	err := r.pool.QueryRow(context.Background(), "select id,name,works from persons where id=$1", id).Scan(&id, &p.Name, &p.Works)
+	err := r.pool.QueryRow(context.Background(), "select id,name,works from persons where id=$1", id).Scan(&p.ID, &p.Name, &p.Works)
 	if err != nil {
 		return p, fmt.Errorf("database error %v", err)
-	}
-	p = model.Person{
-		ID: id,
 	}
 	return p, nil
 }
