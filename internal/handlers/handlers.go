@@ -14,11 +14,13 @@ type Handler struct {
 	rps *repository.Repository
 }
 
+//NewHandler :define new handlers
 func NewHandler(rps *repository.Repository) *Handler {
 	return &Handler{rps: rps}
 }
 
-func (h *Handler) CreateUser(c echo.Context) error { //
+//CreateUser handler: create new model.person and read information about it from JSON
+func (h *Handler) CreateUser(c echo.Context) error {
 	person := model.Person{}
 	err := json.NewDecoder(c.Request().Body).Decode(&person)
 	if err != nil {
@@ -31,6 +33,7 @@ func (h *Handler) CreateUser(c echo.Context) error { //
 	return c.JSON(http.StatusOK, "Successfully create")
 }
 
+//UpdateUser handler:
 func (h *Handler) UpdateUser(c echo.Context) error {
 	person := model.Person{}
 	id, _ := strconv.Atoi(c.Param("id"))

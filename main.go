@@ -27,7 +27,7 @@ func main() {
 	e.PUT("/usersUpdate/:id", h.UpdateUser)
 	e.DELETE("/usersDelete/:id", h.DeleteUser)
 	e.GET("/users/:id", h.GetUserById)
-	err = e.Start(":8080")
+	err = e.Start(":8000")
 	if err != nil {
 		fmt.Println(err)
 	}
