@@ -38,7 +38,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	err = h.rps.Update(id, &person)
+	err = h.rps.Update(c.Request().Context(), id, &person)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
@@ -56,7 +56,7 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 }
 
 func (h *Handler) GetAllUsers(c echo.Context) error {
-	p, err := h.rps.SelectAll()
+	p, err := h.rps.SelectAll(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
