@@ -46,10 +46,19 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 }
 
 func (h *Handler) GetAllUsers(c echo.Context) error {
-	return c.JSON(http.StatusOK, h.rps.SelectAll())
+	p, err := h.rps.SelectAll()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, p)
 }
 
 func (h *Handler) GetUserById(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
-	return c.JSON(http.StatusOK, h.rps.SelectById(id))
+	p, err := h.rps.SelectById(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, p)
+
 }

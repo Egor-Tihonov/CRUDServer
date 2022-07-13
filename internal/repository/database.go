@@ -19,17 +19,17 @@ func New(pool *pgxpool.Pool) *Repository {
 func (r *Repository) Create(ctx context.Context, person *model.Person) error {
 	_, err := r.pool.Exec(ctx, "insert into persons(name,works) values($1,$2)", person.Name, person.Works)
 	if err != nil {
-		err = fmt.Errorf("error: %v", err)
+		err = fmt.Errorf("database error with create user: %v", err)
 	}
 	return err
 }
 
-func (r *Repository) SelectAll() []*model.Person {
+func (r *Repository) SelectAll() ([]*model.Person, error) {
 	var persons []*model.Person
 
 	rows, err := r.pool.Query(context.Background(), "select id,name,works from persons")
 	if err != nil {
-		err = fmt.Errorf("error: %v", err)
+		return nil, fmt.Errorf("database error with select all users: %v", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -42,32 +42,33 @@ func (r *Repository) SelectAll() []*model.Person {
 		persons = append(persons, &p)
 	}
 
-	return persons
+	return persons, err
 }
 
 func (r *Repository) Delete(ctx context.Context, id int) error {
 	_, err := r.pool.Exec(ctx, "delete from persons where id=$1", id)
+	if err != nil {
+		return fmt.Errorf("error with delete user %v", err)
+	}
 	return err
 }
 
 func (r *Repository) Update(id int) error {
-	name := "qwerty"
-	_, err := r.pool.Exec(context.Background(), "update persons set name=$1 where id=$2", name, id)
+	p := model.Person{}
+	_, err := r.pool.Exec(context.Background(), "update persons set name=$1 where id=$2", p.Name, id)
+	if err != nil {
+		return fmt.Errorf("error with update user %v", err)
+	}
 	return err
 }
-func (r *Repository) SelectById(id int) model.Person {
+func (r *Repository) SelectById(id int) (model.Person, error) {
 	p := model.Person{}
-	var name string
-	var works bool
-	err := r.pool.QueryRow(context.Background(), "select id,name,works from persons where id=$1", id).Scan(&id, &name, &works)
+	err := r.pool.QueryRow(context.Background(), "select id,name,works from persons where id=$1", id).Scan(&id, &p.Name, &p.Works)
 	if err != nil {
-		return p
+		return p, fmt.Errorf("database error %v", err)
 	}
 	p = model.Person{
-		ID:    id,
-		Name:  name,
-		Works: works,
+		ID: id,
 	}
-
-	return p
+	return p, nil
 }
