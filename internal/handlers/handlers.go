@@ -68,7 +68,7 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 
 func (h *Handler) GetUserById(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
-	p, err := h.rps.SelectById(id)
+	p, err := h.rps.SelectById(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
