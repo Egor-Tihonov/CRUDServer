@@ -82,7 +82,8 @@ func TestSelectAll(t *testing.T) {
 	require.NoError(t, err, "select all: problems with select all users")
 	require.Equal(t, 4, len(users), "select all: the values are`t equals")
 
-	err = rps.Create(ctx, &p)
+	_, err = rps.pool.Exec(ctx, "insert into persons(name,works,age) values($1,$2,$3)", &p.Name, &p.Works, &p.Age)
+	require.NoError(t, err, "select all: insert error")
 	users, err = rps.SelectAll(ctx)
 	require.NotEqual(t, 4, len(users), "select all: the values are equals")
 
