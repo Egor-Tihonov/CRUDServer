@@ -19,6 +19,9 @@ func New(pool *pgxpool.Pool) *Repository {
 
 //Create : insert new user into database
 func (r *Repository) Create(ctx context.Context, person *model.Person) error {
+	if person.Age >= 200 || person.Age <= 0 {
+		return fmt.Errorf("age cannot be more 200 and less then 0")
+	}
 	_, err := r.pool.Exec(ctx, "insert into persons(name,works,age) values($1,$2,$3)", &person.Name, &person.Works, &person.Age)
 	if err != nil {
 		return fmt.Errorf("database error with create user: %v", err)
@@ -49,10 +52,9 @@ func (r *Repository) SelectAll(ctx context.Context) ([]*model.Person, error) {
 
 //Delete : delete user by his ID
 func (r *Repository) Delete(ctx context.Context, id int) error {
-	id = 20
 	_, err := r.pool.Exec(ctx, "delete from persons where id=$1", id)
 	if err != nil {
-		return fmt.Errorf("error with delete user %v", err)
+		return fmt.Errorf("error delete user %v", err)
 	}
 	return nil
 }
