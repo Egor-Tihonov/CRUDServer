@@ -19,9 +19,9 @@ func New(pool *pgxpool.Pool) *Repository {
 
 //Create : insert new user into database
 func (r *Repository) Create(ctx context.Context, person *model.Person) error {
-	if person.Age >= 200 || person.Age <= 0 {
+	/*if person.Age >= 200 || person.Age <= 0 {
 		return fmt.Errorf("age cannot be more 200 and less then 0")
-	}
+	}*/
 	_, err := r.pool.Exec(ctx, "insert into persons(name,works,age) values($1,$2,$3)", &person.Name, &person.Works, &person.Age)
 	if err != nil {
 		return fmt.Errorf("database error with create user: %v", err)
@@ -61,9 +61,9 @@ func (r *Repository) Delete(ctx context.Context, id int) error {
 
 //Update : update user by his ID
 func (r *Repository) Update(ctx context.Context, id int, person *model.Person) error {
-	if person.Age >= 200 || person.Age <= 0 {
+	/*if person.Age >= 200 || person.Age <= 0 {
 		return fmt.Errorf("age cannot be more 200 and less then 0")
-	}
+	}*/
 	_, err := r.pool.Exec(ctx, "update persons set name=$1,works=$2,age=$3 where id=$4", person.Name, person.Works, person.Age, id)
 	if err != nil {
 		return fmt.Errorf("error with update user %v", err)

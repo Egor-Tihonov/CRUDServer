@@ -128,8 +128,8 @@ func TestUpdate(t *testing.T) {
 	err = rps.Update(ctx, 1, &p5)
 	require.NoError(t, err, "update: error with user's age, it is not suitable")
 	err = rps.Update(ctx, 1, &p1)
-	require.NoError(t, err, "update: index isn't suitable ")
+	require.NoError(t, err, "update: index isn't suitable")
 	err = rps.Update(ctx, 20, &p1)
-	require.NoError(t, err, "update: index is suitable ")
+	require.NoError(t, err, "update: index is suitable")
 
 }
