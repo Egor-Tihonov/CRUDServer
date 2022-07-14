@@ -134,11 +134,11 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 	for _, p := range testValidData {
-		err := rps.Create(ctx, &p)
+		err := rps.Update(ctx, 1, &p)
 		require.NoError(t, err, "update error")
 	}
 	for _, p := range testNoValidData {
-		err := rps.Create(ctx, &p)
+		err := rps.Update(ctx, 1, &p)
 		require.Error(t, err, "update error")
 	}
 }
