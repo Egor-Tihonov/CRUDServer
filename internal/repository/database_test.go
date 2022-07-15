@@ -2,6 +2,7 @@ package repository
 
 import (
 	"awesomeProject/internal/model"
+	"awesomeProject/internal/service"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"os"
@@ -55,20 +56,20 @@ func TestCreate(t *testing.T) {
 			Age:   250,
 		},
 	}
-	rps := New(Pool)
+	rps := service.NewService(New(Pool))
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for _, p := range testValidData {
-		err := rps.Create(ctx, &p)
+		err, _ := rps.CreateUser(ctx, &p)
 		require.NoError(t, err, "create error")
 	}
 	for _, p := range testNoValidData {
-		err := rps.Create(ctx, &p)
+		err, _ := rps.CreateUser(ctx, &p)
 		require.Error(t, err, "create error")
 	}
 }
 func TestSelectAll(t *testing.T) {
-	rps := New(Pool)
+	rps := service.NewService(New(Pool))
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -78,29 +79,29 @@ func TestSelectAll(t *testing.T) {
 		Age:   20,
 	}
 
-	users, err := rps.SelectAll(ctx)
+	users, err := rps.SelectAllUsers(ctx)
 	require.NoError(t, err, "select all: problems with select all users")
 	require.Equal(t, 4, len(users), "select all: the values are`t equals")
 
-	_, err = rps.pool.Exec(ctx, "insert into persons(name,works,age) values($1,$2,$3)", &p.Name, &p.Works, &p.Age)
+	_, err = Pool.Exec(ctx, "insert into persons(name,works,age) values($1,$2,$3)", &p.Name, &p.Works, &p.Age)
 	require.NoError(t, err, "select all: insert error")
-	users, err = rps.SelectAll(ctx)
+	users, err = rps.SelectAllUsers(ctx)
 	require.NotEqual(t, 4, len(users), "select all: the values are equals")
 
 }
 
 func TestSelectById(t *testing.T) {
-	rps := New(Pool)
+	rps := service.NewService(New(Pool))
 	ctx, cancel := context.WithCancel(context.Background())
-	_, err := rps.SelectById(ctx, 1)
+	_, err := rps.GetUserById(ctx, 1)
 	require.NoError(t, err, "select user by id: this id dont exist")
-	_, err = rps.SelectById(ctx, 20)
+	_, err = rps.GetUserById(ctx, 20)
 	require.Error(t, err, "select user by id: this id already exist")
 	cancel()
 }
 
 func TestUpdate(t *testing.T) {
-	rps := New(Pool)
+	rps := service.NewService(New(Pool))
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -134,11 +135,11 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 	for _, p := range testValidData {
-		err := rps.Update(ctx, 1, &p)
+		err, _ := rps.UpdateUser(ctx, 1, &p)
 		require.NoError(t, err, "update error")
 	}
 	for _, p := range testNoValidData {
-		err := rps.Update(ctx, 1, &p)
+		err, _ := rps.UpdateUser(ctx, 1, &p)
 		require.Error(t, err, "update error")
 	}
 }

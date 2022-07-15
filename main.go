@@ -3,6 +3,7 @@ package main
 import (
 	"awesomeProject/internal/handlers"
 	"awesomeProject/internal/repository"
+	"awesomeProject/internal/service"
 	"context"
 	"fmt"
 	"log"
@@ -16,8 +17,7 @@ func main() {
 	if err != nil {
 		log.Fatal("unable to connect ", err)
 	}
-
-	rps := repository.New(pool)
+	rps := service.NewService(repository.New(pool))
 	defer pool.Close()
 	h := handlers.NewHandler(rps)
 	e := echo.New()

@@ -2,21 +2,21 @@ package handlers
 
 import (
 	"awesomeProject/internal/model"
-	"awesomeProject/internal/repository"
+	"awesomeProject/internal/service"
 	"encoding/json"
+	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
-
-	"github.com/labstack/echo/v4"
+	_ "strconv"
 )
 
 type Handler struct {
-	rps *repository.Repository
+	s *service.Service
 }
 
 //NewHandler :define new handlers
-func NewHandler(rps *repository.Repository) *Handler {
-	return &Handler{rps: rps}
+func NewHandler(NewS *service.Service) *Handler {
+	return &Handler{s: NewS}
 }
 
 //CreateUser handler: create new model.person and read information about it from JSON
@@ -26,11 +26,11 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	err = h.rps.Create(c.Request().Context(), &person)
+	err, message := h.s.CreateUser(c.Request().Context(), &person)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, "Successfully create")
+	return c.JSON(http.StatusOK, message)
 }
 
 //UpdateUser handler:
@@ -41,25 +41,25 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	err = h.rps.Update(c.Request().Context(), id, &person)
+	err, message := h.s.UpdateUser(c.Request().Context(), id, &person)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, "Successfully update")
+	return c.JSON(http.StatusOK, message)
 }
 
 func (h *Handler) DeleteUser(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	err := h.rps.Delete(c.Request().Context(), id)
+	err, message := h.s.DeleteUser(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, "Successfully delete")
+	return c.JSON(http.StatusOK, message)
 }
 
 func (h *Handler) GetAllUsers(c echo.Context) error {
-	p, err := h.rps.SelectAll(c.Request().Context())
+	p, err := h.s.SelectAllUsers(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
@@ -68,7 +68,7 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 
 func (h *Handler) GetUserById(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
-	p, err := h.rps.SelectById(c.Request().Context(), id)
+	p, err := h.s.GetUserById(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
