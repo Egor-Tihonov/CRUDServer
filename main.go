@@ -6,19 +6,31 @@ import (
 	"awesomeProject/internal/service"
 	"context"
 	"fmt"
-	"log"
-
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+var (
+	poolP *pgxpool.Pool
+	poolM *mongo.Client
 )
 
 func main() {
-	pool, err := pgxpool.Connect(context.Background(), "postgresql://postgres:123@localhost:5432/person")
-	if err != nil {
-		log.Fatal("unable to connect ", err)
+	dbname := "postgres"
+	conn := DbConnection(dbname)
+	switch dbname {
+	case "postgres":
+		defer poolP.Close()
+	case "mongo":
+		defer poolM.Disconnect(context.Background())
+	default:
+		log.Fatalf("check the spelling of the dbname")
 	}
-	rps := service.NewService(repository.New(pool))
-	defer pool.Close()
+
+	rps := service.NewService(conn)
 	h := handlers.NewHandler(rps)
 	e := echo.New()
 
@@ -27,8 +39,29 @@ func main() {
 	e.PUT("/usersUpdate/:id", h.UpdateUser)
 	e.DELETE("/usersDelete/:id", h.DeleteUser)
 	e.GET("/users/:id", h.GetUserById)
-	err = e.Start(":8000")
+	err := e.Start(":8000")
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func DbConnection(_dbname string) repository.Repository {
+	switch _dbname {
+	case "postgres":
+		poolP, err := pgxpool.Connect(context.Background(), "postgresql://postgres:123@localhost:5432/person")
+		if err != nil {
+			log.Errorf("bad connection with postgresql: ", err)
+			return nil
+		}
+		return &repository.PRepository{Pool: poolP}
+	case "mongo":
+		poolM, err := mongo.Connect(context.Background(), options.Client().ApplyURI(" mongodb://127.0.0.1:27017"))
+		if err != nil {
+			log.Errorf("bad connection with mongodb: ", err)
+			return nil
+		}
+		return repository.MRepository{Pool: poolM}
+
+	}
+	return nil
 }
