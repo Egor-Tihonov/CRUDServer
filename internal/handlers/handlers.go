@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"strconv"
 	_ "strconv"
 )
 
 type Handler struct {
 	s *service.Service
+}
+type Id struct {
+	Id string `json,bson:"id"`
 }
 
 //NewHandler :define new handlers
@@ -26,36 +28,35 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	err, message := h.s.CreateUser(c.Request().Context(), &person)
+	err, newId := h.s.CreateUser(c.Request().Context(), &person)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, message)
+	return c.JSON(http.StatusOK, Id{Id: newId})
 }
 
 //UpdateUser handler:
 func (h *Handler) UpdateUser(c echo.Context) error {
 	person := model.Person{}
-	id, _ := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
 	err := json.NewDecoder(c.Request().Body).Decode(&person)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	err, message := h.s.UpdateUser(c.Request().Context(), id, &person)
+	err = h.s.UpdateUser(c.Request().Context(), id, &person)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, message)
+	return c.JSON(http.StatusOK, "")
 }
 
 func (h *Handler) DeleteUser(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
-
-	err, message := h.s.DeleteUser(c.Request().Context(), id)
+	id := c.Param("id")
+	err := h.s.DeleteUser(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, message)
+	return c.JSON(http.StatusOK, "")
 }
 
 func (h *Handler) GetAllUsers(c echo.Context) error {
@@ -67,7 +68,7 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 }
 
 func (h *Handler) GetUserById(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
 	p, err := h.s.GetUserById(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)

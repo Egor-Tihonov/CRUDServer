@@ -19,21 +19,18 @@ var (
 )
 
 func main() {
-	dbname := "postgres"
+	dbname := "mongo"
 	conn := DbConnection(dbname)
-	switch dbname {
-	case "postgres":
-		defer poolP.Close()
-	case "mongo":
-		defer poolM.Disconnect(context.Background())
-	default:
-		log.Fatalf("check the spelling of the dbname")
-	}
-
+	defer func() {
+		poolP.Close()
+		err := poolM.Disconnect(context.Background())
+		if err != nil {
+			log.Errorf("error close mongo connection - %e", err)
+		}
+	}()
 	rps := service.NewService(conn)
 	h := handlers.NewHandler(rps)
 	e := echo.New()
-
 	e.GET("/users", h.GetAllUsers)
 	e.POST("/usersCreate", h.CreateUser)
 	e.PUT("/usersUpdate/:id", h.UpdateUser)
@@ -54,13 +51,14 @@ func DbConnection(_dbname string) repository.Repository {
 			return nil
 		}
 		return &repository.PRepository{Pool: poolP}
+
 	case "mongo":
-		poolM, err := mongo.Connect(context.Background(), options.Client().ApplyURI(" mongodb://127.0.0.1:27017"))
+		poolM, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://127.0.0.1:27017"))
 		if err != nil {
 			log.Errorf("bad connection with mongodb: ", err)
 			return nil
 		}
-		return repository.MRepository{Pool: poolM}
+		return &repository.MRepository{Pool: poolM}
 
 	}
 	return nil

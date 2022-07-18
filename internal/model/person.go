@@ -1,8 +1,8 @@
 package model
 
 type Person struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Works bool   `json:"works"`
-	Age   int    `json:"age"`
+	ID    string `bson,json:"id"`
+	Name  string `bson,json:"name"`
+	Works bool   `bson,json:"works"`
+	Age   int    `bson,json:"age"`
 }
