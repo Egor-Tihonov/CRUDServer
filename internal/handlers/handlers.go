@@ -4,6 +4,7 @@ import (
 	"awesomeProject/internal/model"
 	"awesomeProject/internal/service"
 	"encoding/json"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	_ "strconv"
@@ -68,10 +69,15 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 }
 
 func (h *Handler) GetUserById(c echo.Context) error {
+	person := model.Person{}
 	id := c.Param("id")
-	p, err := h.s.GetUserById(c.Request().Context(), id)
+	err := json.NewDecoder(c.Request().Body).Decode(&person)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(http.StatusInternalServerError, fmt.Errorf("handlers: cannot decode json file"))
+	}
+	p, err := h.s.GetUserById(c.Request().Context(), id, person.Password)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err) //return c.JSON(http.StatusOk, err)
 	}
 	return c.JSON(http.StatusOK, p)
 

@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	_ "github.com/google/uuid"
+	//"errors"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -13,10 +13,12 @@ type PRepository struct {
 	Pool *pgxpool.Pool
 }
 
+//var no-records:=errors.New("no rows in result set")
+
 //Create : insert new user into database
 func (r *PRepository) Create(ctx context.Context, person *model.Person) (error, string) {
 	newID := uuid.New().String()
-	_, err := r.Pool.Exec(ctx, "insert into persons(id,name,works,age) values($1,$2,$3,$4)", newID, &person.Name, &person.Works, &person.Age)
+	_, err := r.Pool.Exec(ctx, "insert into persons(id,name,works,age,password) values($1,$2,$3,$4,$5)", newID, &person.Name, &person.Works, &person.Age, &person.Password)
 	if err != nil {
 		return fmt.Errorf("database error with create user: %v", err), ""
 	}
@@ -64,9 +66,10 @@ func (r *PRepository) Update(ctx context.Context, id string, person *model.Perso
 //SelectById : select one user by his ID
 func (r *PRepository) SelectById(ctx context.Context, id string) (model.Person, error) {
 	p := model.Person{}
-	err := r.Pool.QueryRow(ctx, "select id,name,works,age from persons where id=$1", id).Scan(&p.ID, &p.Name, &p.Works, &p.Age)
-	if err != nil {
-		return p, fmt.Errorf("database error %v", err)
+	err := r.Pool.QueryRow(ctx, "select id,name,works,age,password from persons where id=$1", id).Scan(&p.ID, &p.Name, &p.Works, &p.Age, &p.Password)
+
+	if err != nil /*err==no-records*/ {
+		return p, fmt.Errorf("database error, select by id: %v", err) /*p, fmt.errorf("user with this id doesnt exist")*/
 	}
 	return p, nil
 }
