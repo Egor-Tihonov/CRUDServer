@@ -7,15 +7,23 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
+	"time"
+)
+
+var jwtKey = []byte("super-key")
+
+/*type Claims struct {
+	jwt.StandardClaims
+	Username string `json:"username"`
+}*/
+
+const (
+	accessTokenTimeLife  = 15
+	refreshTokenTimeLife = 720
 )
 
 type Service struct {
 	rps repository.Repository
-}
-
-type Claims struct {
-	jwt.StandardClaims
-	Username string `json:"username"`
 }
 
 func NewService(NewRps repository.Repository) *Service {
@@ -57,6 +65,11 @@ func (s *Service) GetUserById(ctx context.Context, id string, password string) (
 		return model.Person{}, fmt.Errorf("incorrect password: %v", err)
 	}
 	authUser.Password = password
+	validToken, err := s.CreateJWT(authUser.Name)
+	if err != nil {
+		return model.Person{}, err
+	}
+	fmt.Println(validToken)
 	return authUser, nil
 }
 
@@ -66,12 +79,24 @@ func HashPassword(password string) (string, error) {
 	}
 	bytesPassword := []byte(password)
 	hashedBytesPassword, err := bcrypt.GenerateFromPassword(bytesPassword, bcrypt.DefaultCost)
-	/*a1, _ := bcrypt.GenerateFromPassword(bytesPassword, bcrypt.DefaultCost)
-	err = bcrypt.CompareHashAndPassword(a1, []byte(password))*/
-	//log.Error(err)
 	if err != nil {
 		return "", err
 	}
 	hashPassword := string(hashedBytesPassword[:])
 	return hashPassword, nil
+}
+
+func (s *Service) CreateJWT(username string) (string, error) {
+	accessToken := jwt.New(jwt.SigningMethodHS256)
+	claimsA := accessToken.Claims.(jwt.MapClaims)
+	claimsA["exp"] = time.Now().Add(time.Hour).Unix()
+	claimsA["username"] = username
+	accessTokenStr, err := accessToken.SignedString(jwtKey)
+	if err != nil {
+		return "", fmt.Errorf("service: can't generate access token - %v", err)
+	}
+	refreshToken := jwt.New(jwt.SigningMethodHS256)
+	claimsR := refreshToken.Claims.(jwt.MapClaims)
+
+	return accessTokenStr, nil
 }

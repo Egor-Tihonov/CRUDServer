@@ -16,6 +16,9 @@ type Handler struct {
 type Id struct {
 	Id string `json,bson:"id"`
 }
+type Authentication struct {
+	Password string `json,bson:"password"`
+}
 
 //NewHandler :define new handlers
 func NewHandler(NewS *service.Service) *Handler {
@@ -69,13 +72,13 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 }
 
 func (h *Handler) GetUserById(c echo.Context) error {
-	person := model.Person{}
+	auth := Authentication{}
 	id := c.Param("id")
-	err := json.NewDecoder(c.Request().Body).Decode(&person)
+	err := json.NewDecoder(c.Request().Body).Decode(&auth)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, fmt.Errorf("handlers: cannot decode json file"))
 	}
-	p, err := h.s.GetUserById(c.Request().Context(), id, person.Password)
+	p, err := h.s.GetUserById(c.Request().Context(), id, auth.Password)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err) //return c.JSON(http.StatusOk, err)
 	}
