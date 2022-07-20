@@ -32,11 +32,12 @@ func main() {
 	h := handlers.NewHandler(rps)
 	e := echo.New()
 	e.GET("/users", h.GetAllUsers)
-	e.POST("/usersCreate", h.CreateUser)
+	e.POST("/usersCreate", h.Registration)
 	e.PUT("/usersUpdate/:id", h.UpdateUser)
 	e.DELETE("/usersDelete/:id", h.DeleteUser)
-	e.GET("/users/:id", h.GetUserById)
-	err := e.Start(":8000")
+	e.POST("/users/:id", h.Authentication)
+	e.GET("/refreshToken/:refreshToken", h.RefreshToken)
+	err := e.Start(":8080")
 	if err != nil {
 		fmt.Println(err)
 	}

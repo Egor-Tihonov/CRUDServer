@@ -54,9 +54,16 @@ func (r *PRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-//Update : update user by his ID
-func (r *PRepository) Update(ctx context.Context, id string, person *model.Person) error {
-	_, err := r.Pool.Exec(ctx, "update persons set name=$1,works=$2,age=$3 where id=$4", person.Name, person.Works, person.Age, id)
+//UpdateAuth : update user refreshToken by his ID
+func (r *PRepository) UpdateAuth(ctx context.Context, id string, refreshToken string) error {
+	_, err := r.Pool.Exec(ctx, "update persons set refreshToken=$1 where id=$2", refreshToken, id)
+	if err != nil {
+		return fmt.Errorf("error with update user %v", err)
+	}
+	return nil
+}
+func (r *PRepository) Update(ctx context.Context, id string, p *model.Person) error {
+	_, err := r.Pool.Exec(ctx, "update persons set name=$1,works=$2,age=$3 where id=$4", &p.Name, &p.Works, &p.Age, id)
 	if err != nil {
 		return fmt.Errorf("error with update user %v", err)
 	}
@@ -67,6 +74,15 @@ func (r *PRepository) Update(ctx context.Context, id string, person *model.Perso
 func (r *PRepository) SelectById(ctx context.Context, id string) (model.Person, error) {
 	p := model.Person{}
 	err := r.Pool.QueryRow(ctx, "select id,name,works,age,password from persons where id=$1", id).Scan(&p.ID, &p.Name, &p.Works, &p.Age, &p.Password)
+
+	if err != nil /*err==no-records*/ {
+		return p, fmt.Errorf("database error, select by id: %v", err) /*p, fmt.errorf("user with this id doesnt exist")*/
+	}
+	return p, nil
+}
+func (r *PRepository) SelectByIdAuth(ctx context.Context, id string) (model.Person, error) {
+	p := model.Person{}
+	err := r.Pool.QueryRow(ctx, "select id,refreshToken from persons where id=$1", id).Scan(&p.ID, &p.RefreshToken)
 
 	if err != nil /*err==no-records*/ {
 		return p, fmt.Errorf("database error, select by id: %v", err) /*p, fmt.errorf("user with this id doesnt exist")*/

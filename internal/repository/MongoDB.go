@@ -29,15 +29,9 @@ func (m *MRepository) Create(ctx context.Context, person *model.Person) (error, 
 }
 
 func (m *MRepository) Update(ctx context.Context, id string, person *model.Person) error {
-	collection := m.Pool.Database("person").Collection("person")
-	_, err := collection.UpdateOne(ctx, bson.D{{"id", id}}, bson.D{{"$set", bson.D{
-		{"name", person.Name},
-		{"works", person.Works},
-		{"age", person.Age},
-	}}})
-	if err != nil {
-		return fmt.Errorf("mongo: unable to update user %v", err)
-	}
+	return nil
+}
+func (m *MRepository) UpdateAuth(ctx context.Context, id string, refreshToken string) error {
 	return nil
 }
 
@@ -71,6 +65,15 @@ func (m *MRepository) Delete(ctx context.Context, id string) error {
 }
 
 func (m *MRepository) SelectById(ctx context.Context, id string) (model.Person, error) {
+	user := model.Person{}
+	collection := m.Pool.Database("person").Collection("person")
+	err := collection.FindOne(ctx, bson.D{{"id", id}}).Decode(&user)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+}
+func (m *MRepository) SelectByIdAuth(ctx context.Context, id string) (model.Person, error) {
 	user := model.Person{}
 	collection := m.Pool.Database("person").Collection("person")
 	err := collection.FindOne(ctx, bson.D{{"id", id}}).Decode(&user)
