@@ -14,6 +14,9 @@ type MRepository struct { //mongo
 }
 
 func (m *MRepository) Create(ctx context.Context, person *model.Person) (string, error) {
+	if person.Age < 0 || person.Age > 180 {
+		return "", error(fmt.Errorf("mongo repository: error with create, age must be more then 0 and less then 180"))
+	}
 	newId := uuid.New().String()
 	collection := m.Pool.Database("person").Collection("person")
 	_, err := collection.InsertOne(ctx, bson.D{
@@ -31,6 +34,9 @@ func (m *MRepository) Create(ctx context.Context, person *model.Person) (string,
 }
 
 func (m *MRepository) Update(ctx context.Context, id string, person *model.Person) error {
+	if person.Age < 0 || person.Age > 180 {
+		return error(fmt.Errorf("mongo repository: error with create, age must be more then 0 and less then 180"))
+	}
 	collection := m.Pool.Database("person").Collection("person")
 	_, err := collection.UpdateOne(ctx, bson.D{{"id", id}}, bson.D{{"$set", bson.D{
 		{"name", person.Name},
