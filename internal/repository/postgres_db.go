@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-type PRepository struct {
+type PRepository struct { //postgres
 	Pool *pgxpool.Pool
 }
 

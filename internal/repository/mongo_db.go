@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type MRepository struct {
+type MRepository struct { //mongo
 	Pool *mongo.Client
 }
 

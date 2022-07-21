@@ -11,7 +11,7 @@ import (
 	_ "strconv"
 )
 
-type Handler struct {
+type Handler struct { //handler
 	s *service.Service
 }
 

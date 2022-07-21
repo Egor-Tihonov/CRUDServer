@@ -1,6 +1,6 @@
 package model
 
-type Person struct {
+type Person struct { //person
 	ID           string `bson,json:"id"`
 	Name         string `bson,json:"name"`
 	Works        bool   `bson,json:"works"`

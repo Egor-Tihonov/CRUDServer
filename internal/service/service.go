@@ -12,11 +12,11 @@ import (
 
 var JwtKey = []byte("super-key") //key fo generation and check tokens
 
-type Service struct {
+type Service struct { //service new
 	rps repository.Repository
 }
 
-func NewService(NewRps repository.Repository) *Service {
+func NewService(NewRps repository.Repository) *Service { //create
 	return &Service{rps: NewRps}
 }
 
