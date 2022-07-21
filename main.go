@@ -20,7 +20,7 @@ var (
 )
 
 func main() {
-	dbname := "mongo"
+	dbname := "postgres"
 	conn := DbConnection(dbname)
 	defer func() {
 		poolP.Close()

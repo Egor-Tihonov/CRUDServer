@@ -70,7 +70,7 @@ func (s *Service) Authentication(ctx context.Context, id string, password string
 }
 
 func HashPassword(password string) (string, error) {
-	if password == "" {
+	if password == "" || password == " " {
 		return "", fmt.Errorf("service: password is equals to zero")
 	}
 	bytesPassword := []byte(password)
@@ -104,7 +104,7 @@ func CreateJWT(rps repository.Repository, person *model.Person, ctx context.Cont
 	return accessTokenStr, refreshTokenStr, nil
 }
 
-func (s Service) RefreshToken(ctx context.Context, refreshTokenString string) (string, string, error) { //refresh our tokens
+func (s *Service) RefreshToken(ctx context.Context, refreshTokenString string) (string, string, error) { //refresh our tokens
 	refreshToken, err := jwt.Parse(refreshTokenString, func(t *jwt.Token) (interface{}, error) {
 		return JwtKey, nil
 	}) //parse it into string format
