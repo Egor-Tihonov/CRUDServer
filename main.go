@@ -20,7 +20,7 @@ var (
 )
 
 func main() {
-	dbname := "postgres"
+	dbname := "mongo"
 	conn := DbConnection(dbname)
 	defer func() {
 		poolP.Close()
@@ -34,6 +34,7 @@ func main() {
 	h := handlers.NewHandler(rps)
 	e := echo.New()
 	e.GET("/users", h.GetAllUsers)
+	e.GET("/download", h.DownloadImage)
 	e.POST("/sign-up", h.Registration)
 	e.PUT("/usersUpdate/:id", h.UpdateUser, middleware.IsAuthenticated)
 	e.DELETE("/usersDelete/:id", h.DeleteUser, middleware.IsAuthenticated)

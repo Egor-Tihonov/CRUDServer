@@ -21,6 +21,7 @@ func (m *MRepository) Create(ctx context.Context, person *model.Person) (string,
 		{Key: "name", Value: person.Name},
 		{Key: "works", Value: person.Works},
 		{Key: "age", Value: person.Age},
+		{Key: "password", Value: person.Password},
 		{Key: "refreshtoken", Value: person.RefreshToken},
 	})
 	if err != nil {
@@ -55,7 +56,7 @@ func (m *MRepository) UpdateAuth(ctx context.Context, id string, refreshToken st
 func (m *MRepository) SelectAll(ctx context.Context) ([]*model.Person, error) {
 	var users []*model.Person
 	collection := m.Pool.Database("person").Collection("person")
-	c, err := collection.Find(ctx, bson.D{{"refreshtoken", 0}, {"password", 0}})
+	c, err := collection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, fmt.Errorf("mongo: unable to select all users %v", err)
 	}
@@ -83,7 +84,7 @@ func (m *MRepository) Delete(ctx context.Context, id string) error {
 func (m *MRepository) SelectById(ctx context.Context, id string) (model.Person, error) {
 	user := model.Person{}
 	collection := m.Pool.Database("person").Collection("person")
-	err := collection.FindOne(ctx, bson.D{{"id", id}, {"refreshtoken", 0}}).Decode(&user)
+	err := collection.FindOne(ctx, bson.D{{"id", id}}).Decode(&user)
 	if err != nil {
 		return user, err
 	}

@@ -14,12 +14,6 @@ import (
 type Handler struct {
 	s *service.Service
 }
-type Id struct {
-	Id string `json,bson:"id"`
-}
-type Authentication struct {
-	Password string `json,bson:"password"`
-}
 
 //NewHandler :define new handlers
 func NewHandler(NewS *service.Service) *Handler {
@@ -37,7 +31,13 @@ func (h *Handler) Registration(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, Id{Id: newId})
+	return c.JSONBlob(
+		http.StatusOK,
+		[]byte(
+			fmt.Sprintf(`{
+			"ID":%v}`, newId),
+		),
+	)
 }
 
 //UpdateUser handler:
@@ -80,7 +80,7 @@ func (h *Handler) GetUserById(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 func (h *Handler) Authentication(c echo.Context) error {
-	auth := Authentication{}
+	auth := model.Authentication{}
 	id := c.Param("id")
 	err := json.NewDecoder(c.Request().Body).Decode(&auth)
 	if err != nil {
@@ -88,7 +88,7 @@ func (h *Handler) Authentication(c echo.Context) error {
 	}
 	accessToken, refreshToken, err := h.s.Authentication(c.Request().Context(), id, auth.Password)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err) //return c.JSON(http.StatusOk, err)
+		return c.JSON(http.StatusInternalServerError, fmt.Errorf("error:%v", err)) //return c.JSON(http.StatusOk, err)
 	}
 	return c.JSONBlob(
 		http.StatusOK,
@@ -116,4 +116,8 @@ func (h *Handler) RefreshToken(c echo.Context) error {
 			"refreshToken" : %v}`, newAccessTokenString, newRefreshTokenString),
 		),
 	)
+}
+
+func (h *Handler) DownloadImage(c echo.Context) error {
+	return c.File("https://ichef.bbci.co.uk/news/976/cpsprodpb/79F2/production/_123381213_06.jpg")
 }

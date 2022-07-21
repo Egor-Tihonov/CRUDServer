@@ -8,3 +8,6 @@ type Person struct {
 	Password     string `bson,json:"password"`
 	RefreshToken string `bson,json:"refreshToken"`
 }
+type Authentication struct {
+	Password string `json,bson:"password"`
+}

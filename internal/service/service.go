@@ -26,7 +26,7 @@ func (s *Service) Registration(ctx context.Context, person *model.Person) (error
 		return err, ""
 	}
 	person.Password = hPassword
-	err, newId := s.rps.Create(ctx, person)
+	newId, err := s.rps.Create(ctx, person)
 	if err != nil {
 		return fmt.Errorf("service: registration failed: %v", err), ""
 	}
