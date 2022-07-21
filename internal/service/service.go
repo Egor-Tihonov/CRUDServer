@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var JwtKey = []byte("super-key")
+var JwtKey = []byte("super-key") //key fo generation and check tokens
 
 type Service struct {
 	rps repository.Repository
@@ -20,8 +20,8 @@ func NewService(NewRps repository.Repository) *Service {
 	return &Service{rps: NewRps}
 }
 
-func (s *Service) Registration(ctx context.Context, person *model.Person) (error, string) { //registration
-	hPassword, err := HashPassword(person.Password)
+func (s *Service) Registration(ctx context.Context, person *model.Person) (error, string) { //users`s registration
+	hPassword, err := HashPassword(person.Password) //check password (authentication)
 	if err != nil {
 		return err, ""
 	}
@@ -33,19 +33,19 @@ func (s *Service) Registration(ctx context.Context, person *model.Person) (error
 	return nil, newId
 }
 
-func (s *Service) UpdateUserAuth(ctx context.Context, id string, refreshToken string) error {
+func (s *Service) UpdateUserAuth(ctx context.Context, id string, refreshToken string) error { //add into user refresh token
 	return s.rps.UpdateAuth(ctx, id, refreshToken)
 }
-func (s *Service) UpdateUser(ctx context.Context, id string, person *model.Person) error {
+func (s *Service) UpdateUser(ctx context.Context, id string, person *model.Person) error { //update user
 	return s.rps.Update(ctx, id, person)
 }
-func (s *Service) SelectAllUsers(ctx context.Context) ([]*model.Person, error) {
+func (s *Service) SelectAllUsers(ctx context.Context) ([]*model.Person, error) { //get all users from DB without passwords and tokens
 	return s.rps.SelectAll(ctx)
 }
-func (s *Service) DeleteUser(ctx context.Context, id string) error {
+func (s *Service) DeleteUser(ctx context.Context, id string) error { //delete user from DB
 	return s.rps.Delete(ctx, id)
 }
-func (s *Service) GetUserById(ctx context.Context, id string) (model.Person, error) {
+func (s *Service) GetUserById(ctx context.Context, id string) (model.Person, error) { //get one user by id
 	user, err := s.rps.SelectById(ctx, id)
 	if err != nil {
 		return model.Person{}, fmt.Errorf("serivce: error with select user by id: %v", err)
@@ -60,7 +60,7 @@ func (s *Service) Authentication(ctx context.Context, id string, password string
 	}
 	incoming := []byte(password)
 	existing := []byte(authUser.Password)
-	err = bcrypt.CompareHashAndPassword(existing, incoming)
+	err = bcrypt.CompareHashAndPassword(existing, incoming) //check passwords
 	if err != nil {
 		return "", "", fmt.Errorf("incorrect password: %v", err)
 	}
@@ -83,11 +83,11 @@ func HashPassword(password string) (string, error) {
 }
 
 func CreateJWT(rps repository.Repository, person *model.Person, ctx context.Context) (string, string, error) {
-	accessToken := jwt.New(jwt.SigningMethodHS256)
-	claimsA := accessToken.Claims.(jwt.MapClaims)
-	claimsA["exp"] = time.Now().Add(15 * time.Minute).Unix()
-	claimsA["username"] = person.Name
-	accessTokenStr, err := accessToken.SignedString(JwtKey)
+	accessToken := jwt.New(jwt.SigningMethodHS256)           //encrypt access token by SigningMethodHS256 method
+	claimsA := accessToken.Claims.(jwt.MapClaims)            //fill access-token`s claims
+	claimsA["exp"] = time.Now().Add(15 * time.Minute).Unix() //work time
+	claimsA["username"] = person.Name                        //payload
+	accessTokenStr, err := accessToken.SignedString(JwtKey)  //convert token to string format
 	if err != nil {
 		return "", "", fmt.Errorf("service: can't generate access token - %v", err)
 	}
@@ -97,17 +97,17 @@ func CreateJWT(rps repository.Repository, person *model.Person, ctx context.Cont
 	claimsR["exp"] = time.Now().Add(time.Hour * 3).Unix()
 	claimsR["jti"] = person.ID
 	refreshTokenStr, err := refreshToken.SignedString(JwtKey)
-	err = rps.UpdateAuth(ctx, person.ID, refreshTokenStr)
+	err = rps.UpdateAuth(ctx, person.ID, refreshTokenStr) //add into user refresh token
 	if err != nil {
 		return "", "", fmt.Errorf("service: can't generate refresh token - %v", err)
 	}
 	return accessTokenStr, refreshTokenStr, nil
 }
 
-func (s Service) RefreshToken(ctx context.Context, refreshTokenString string) (string, string, error) {
+func (s Service) RefreshToken(ctx context.Context, refreshTokenString string) (string, string, error) { //refresh our tokens
 	refreshToken, err := jwt.Parse(refreshTokenString, func(t *jwt.Token) (interface{}, error) {
 		return JwtKey, nil
-	})
+	}) //parse it into string format
 	if err != nil {
 		return "", "", fmt.Errorf("service: can't parse refresh token - %w", err)
 	}
