@@ -20,7 +20,7 @@ var (
 )
 
 func main() {
-	dbname := "mongo"
+	dbname := "postgres"
 	conn := DbConnection(dbname)
 	defer func() {
 		poolP.Close()
@@ -40,7 +40,7 @@ func main() {
 	e.DELETE("/usersDelete/:id", h.DeleteUser, middleware.IsAuthenticated)
 	e.POST("/login/:id", h.Authentication)
 	e.GET("/users/:id", h.GetUserById, middleware.IsAuthenticated)
-	e.GET("/refreshToken/:refreshToken", h.RefreshToken, middleware.IsAuthenticated)
+	e.GET("/refreshToken", h.RefreshToken, middleware.IsAuthenticated)
 	err := e.Start(":8080")
 	if err != nil {
 		fmt.Println(err)
