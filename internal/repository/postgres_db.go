@@ -16,13 +16,13 @@ type PRepository struct {
 //var no-records:=errors.New("no rows in result set")
 
 //Create : insert new user into database
-func (r *PRepository) Create(ctx context.Context, person *model.Person) (error, string) {
+func (r *PRepository) Create(ctx context.Context, person *model.Person) (string, error) {
 	newID := uuid.New().String()
 	_, err := r.Pool.Exec(ctx, "insert into persons(id,name,works,age,password) values($1,$2,$3,$4,$5)", newID, &person.Name, &person.Works, &person.Age, &person.Password)
 	if err != nil {
-		return fmt.Errorf("database error with create user: %v", err), ""
+		return "", fmt.Errorf("database error with create user: %v", err)
 	}
-	return nil, newID
+	return newID, nil
 }
 
 // SelectAll : Print all users(ID,Name,Works) from database
