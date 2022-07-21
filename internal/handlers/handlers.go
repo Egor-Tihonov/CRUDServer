@@ -42,16 +42,9 @@ func (h *Handler) Registration(c echo.Context) error {
 
 //UpdateUser handler:
 func (h *Handler) UpdateUser(c echo.Context) error {
-	refreshTokenString := c.QueryString()
-
-	newAccessTokenString, newRefreshTokenString, err := h.s.RefreshToken(c.Request().Context(), refreshTokenString)
-	if err != nil {
-		log.Errorf("handler: token refresh failed - %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "error while creating tokens")
-	}
 	person := model.Person{}
 	id := c.Param("id")
-	err = json.NewDecoder(c.Request().Body).Decode(&person)
+	err := json.NewDecoder(c.Request().Body).Decode(&person)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
@@ -59,14 +52,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSONBlob(
-		http.StatusOK,
-		[]byte(
-			fmt.Sprintf(`{
-			"accessToken" : %v,
-			"refreshToken" : %v}`, newAccessTokenString, newRefreshTokenString),
-		),
-	)
+	return c.JSON(http.StatusOK, "Ok")
 }
 
 func (h *Handler) DeleteUser(c echo.Context) error {
@@ -85,7 +71,14 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, p)
 }
-
+func (h *Handler) GetUserById(c echo.Context) error {
+	id := c.Param("id")
+	user, err := h.s.GetUserById(c.Request().Context(), id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, user)
+}
 func (h *Handler) Authentication(c echo.Context) error {
 	auth := Authentication{}
 	id := c.Param("id")

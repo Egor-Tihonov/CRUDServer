@@ -2,6 +2,7 @@ package main
 
 import (
 	"awesomeProject/internal/handlers"
+	"awesomeProject/internal/middleware"
 	"awesomeProject/internal/repository"
 	"awesomeProject/internal/service"
 	"context"
@@ -28,15 +29,17 @@ func main() {
 			log.Errorf("error close mongo connection - %e", err)
 		}
 	}()
+
 	rps := service.NewService(conn)
 	h := handlers.NewHandler(rps)
 	e := echo.New()
 	e.GET("/users", h.GetAllUsers)
-	e.POST("/usersCreate", h.Registration)
-	e.PUT("/usersUpdate/:id", h.UpdateUser)
-	e.DELETE("/usersDelete/:id", h.DeleteUser)
-	e.POST("/users/:id", h.Authentication)
-	e.GET("/refreshToken/:refreshToken", h.RefreshToken)
+	e.POST("/sign-up", h.Registration)
+	e.PUT("/usersUpdate/:id", h.UpdateUser, middleware.IsAuthenticated)
+	e.DELETE("/usersDelete/:id", h.DeleteUser, middleware.IsAuthenticated)
+	e.POST("/login/:id", h.Authentication)
+	e.GET("/users/:id", h.GetUserById, middleware.IsAuthenticated)
+	e.GET("/refreshToken/:refreshToken", h.RefreshToken, middleware.IsAuthenticated)
 	err := e.Start(":8080")
 	if err != nil {
 		fmt.Println(err)

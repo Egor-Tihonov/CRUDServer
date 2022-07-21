@@ -74,7 +74,6 @@ func (r *PRepository) Update(ctx context.Context, id string, p *model.Person) er
 func (r *PRepository) SelectById(ctx context.Context, id string) (model.Person, error) {
 	p := model.Person{}
 	err := r.Pool.QueryRow(ctx, "select id,name,works,age,password from persons where id=$1", id).Scan(&p.ID, &p.Name, &p.Works, &p.Age, &p.Password)
-
 	if err != nil /*err==no-records*/ {
 		return p, fmt.Errorf("database error, select by id: %v", err) /*p, fmt.errorf("user with this id doesnt exist")*/
 	}

@@ -10,17 +10,7 @@ import (
 	"time"
 )
 
-var jwtKey = []byte("super-key")
-
-/*type Claims struct {
-	jwt.StandardClaims
-	Username string `json:"username"`
-}*/
-
-const (
-	accessTokenTimeLife  = 15
-	refreshTokenTimeLife = 720
-)
+var JwtKey = []byte("super-key")
 
 type Service struct {
 	rps repository.Repository
@@ -55,6 +45,14 @@ func (s *Service) SelectAllUsers(ctx context.Context) ([]*model.Person, error) {
 func (s *Service) DeleteUser(ctx context.Context, id string) error {
 	return s.rps.Delete(ctx, id)
 }
+func (s *Service) GetUserById(ctx context.Context, id string) (model.Person, error) {
+	user, err := s.rps.SelectById(ctx, id)
+	if err != nil {
+		return model.Person{}, fmt.Errorf("serivce: error with select user by id: %v", err)
+	}
+	return user, nil
+}
+
 func (s *Service) Authentication(ctx context.Context, id string, password string) (string, string, error) { //authentication
 	authUser, err := s.rps.SelectById(ctx, id)
 	if err != nil {
@@ -89,7 +87,7 @@ func CreateJWT(rps repository.Repository, person *model.Person, ctx context.Cont
 	claimsA := accessToken.Claims.(jwt.MapClaims)
 	claimsA["exp"] = time.Now().Add(15 * time.Minute).Unix()
 	claimsA["username"] = person.Name
-	accessTokenStr, err := accessToken.SignedString(jwtKey)
+	accessTokenStr, err := accessToken.SignedString(JwtKey)
 	if err != nil {
 		return "", "", fmt.Errorf("service: can't generate access token - %v", err)
 	}
@@ -98,7 +96,7 @@ func CreateJWT(rps repository.Repository, person *model.Person, ctx context.Cont
 	claimsR["username"] = person.Name
 	claimsR["exp"] = time.Now().Add(time.Hour * 3).Unix()
 	claimsR["jti"] = person.ID
-	refreshTokenStr, err := refreshToken.SignedString(jwtKey)
+	refreshTokenStr, err := refreshToken.SignedString(JwtKey)
 	err = rps.UpdateAuth(ctx, person.ID, refreshTokenStr)
 	if err != nil {
 		return "", "", fmt.Errorf("service: can't generate refresh token - %v", err)
@@ -108,7 +106,7 @@ func CreateJWT(rps repository.Repository, person *model.Person, ctx context.Cont
 
 func (s Service) RefreshToken(ctx context.Context, refreshTokenString string) (string, string, error) {
 	refreshToken, err := jwt.Parse(refreshTokenString, func(t *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
+		return JwtKey, nil
 	})
 	if err != nil {
 		return "", "", fmt.Errorf("service: can't parse refresh token - %w", err)
