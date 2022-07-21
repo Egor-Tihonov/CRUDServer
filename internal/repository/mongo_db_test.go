@@ -91,7 +91,7 @@ func TestSelectAllMongo(t *testing.T) {
 		{Key: "name", Value: "Sasha"},
 		{Key: "works", Value: true},
 		{Key: "age", Value: 18},
-		{Key: "password", Value: "sheisbeatiful"},
+		{Key: "password", Value: "sheisverybeatiful"},
 		{Key: "refreshtoken", Value: ""},
 	})
 	require.NoError(t, err, "select all: insert error")

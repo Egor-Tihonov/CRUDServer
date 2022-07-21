@@ -60,7 +60,7 @@ func DbConnection(_dbname string) repository.Repository {
 	case "mongo":
 		poolM, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://127.0.0.1:27017"))
 		if err != nil {
-			log.Errorf("bad connection with mongodb: ", err)
+			log.Errorf("bad connection with mongoDb: ", err)
 			return nil
 		}
 		return &repository.MRepository{Pool: poolM}

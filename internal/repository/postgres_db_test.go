@@ -5,6 +5,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
+	"os"
 	"testing"
 )
 
@@ -20,7 +21,7 @@ func NewService(NewRps Repository) *Service { //create
 	return &Service{rps: NewRps}
 }
 
-/*func TestMain(m *testing.M) {
+func TestMain(m *testing.M) {
 	pool, err := pgxpool.Connect(context.Background(), "postgresql://postgres:123@localhost:5432/person")
 	if err != nil {
 		log.Fatalf("Bad connection: %v", err)
@@ -28,7 +29,7 @@ func NewService(NewRps Repository) *Service { //create
 	Pool = pool
 	run := m.Run()
 	os.Exit(run)
-}*/
+}
 
 func TestCreate(t *testing.T) {
 	testValidData := []model.Person{
