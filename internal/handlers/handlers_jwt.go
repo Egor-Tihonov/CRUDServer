@@ -9,10 +9,6 @@ import (
 	"net/http"
 )
 
-type refresh struct {
-	refre string `json:"refre"`
-}
-
 //Registration : create new model.person and read information about it from JSON
 func (h *Handler) Registration(c echo.Context) error {
 	person := model.Person{}
@@ -55,12 +51,12 @@ func (h *Handler) Authentication(c echo.Context) error {
 
 }
 func (h *Handler) RefreshToken(c echo.Context) error {
-	refresh1 := refresh{}
-	err := json.NewDecoder(c.Request().Body).Decode(&refresh1)
+	refreshToken := model.RefreshTokens{}
+	err := json.NewDecoder(c.Request().Body).Decode(&refreshToken)
 	if err != nil {
 		return err
 	}
-	newAccessTokenString, newRefreshTokenString, err := h.s.RefreshToken(c.Request().Context(), refresh1.refre)
+	newAccessTokenString, newRefreshTokenString, err := h.s.RefreshToken(c.Request().Context(), refreshToken.RefreshToken)
 	if err != nil {
 		log.Errorf("handler: token refresh failed - %v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "error while creating tokens")

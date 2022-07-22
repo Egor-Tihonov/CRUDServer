@@ -38,6 +38,7 @@ func main() {
 	e.PUT("/usersUpdate/:id", h.UpdateUser, middleware.IsAuthenticated)
 	e.DELETE("/usersDelete/:id", h.DeleteUser, middleware.IsAuthenticated)
 	e.POST("/login/:id", h.Authentication)
+	e.POST("/logout/:id", h.Logout, middleware.IsAuthenticated)
 	e.GET("/users/:id", h.GetUserById, middleware.IsAuthenticated)
 	e.GET("/refreshToken", h.RefreshToken, middleware.IsAuthenticated)
 	err := e.Start(":8080")
