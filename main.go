@@ -29,7 +29,6 @@ func main() {
 			log.Errorf("error close mongo connection - %e", err)
 		}
 	}()
-
 	rps := service.NewService(conn)
 	h := handlers.NewHandler(rps)
 	e := echo.New()

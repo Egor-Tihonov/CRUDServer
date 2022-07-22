@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v4"
+
 	//"errors"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
@@ -47,8 +49,14 @@ func (r *PRepository) SelectAll(ctx context.Context) ([]*model.Person, error) {
 
 //Delete : delete user by his ID
 func (r *PRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.Pool.Exec(ctx, "delete from persons where id=$1", id)
+	a, err := r.Pool.Exec(ctx, "delete from persons where id=$1", id)
+	if a.RowsAffected() == 0 {
+		return fmt.Errorf("user with this id doesnt exist")
+	}
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return fmt.Errorf("user with this id doesnt exist: %v", err)
+		}
 		return fmt.Errorf("error delete user %v", err)
 	}
 	return nil
@@ -56,14 +64,20 @@ func (r *PRepository) Delete(ctx context.Context, id string) error {
 
 //UpdateAuth : update user refreshToken by his ID
 func (r *PRepository) UpdateAuth(ctx context.Context, id string, refreshToken string) error {
-	_, err := r.Pool.Exec(ctx, "update persons set refreshToken=$1 where id=$2", refreshToken, id)
+	a, err := r.Pool.Exec(ctx, "update persons set refreshToken=$1 where id=$2", refreshToken, id)
+	if a.RowsAffected() == 0 {
+		return fmt.Errorf("user with this id doesnt exist")
+	}
 	if err != nil {
 		return fmt.Errorf("error with update user %v", err)
 	}
 	return nil
 }
 func (r *PRepository) Update(ctx context.Context, id string, p *model.Person) error {
-	_, err := r.Pool.Exec(ctx, "update persons set name=$1,works=$2,age=$3 where id=$4", &p.Name, &p.Works, &p.Age, id)
+	a, err := r.Pool.Exec(ctx, "update persons set name=$1,works=$2,age=$3 where id=$4", &p.Name, &p.Works, &p.Age, id)
+	if a.RowsAffected() == 0 {
+		return fmt.Errorf("user with this id doesnt exist")
+	}
 	if err != nil {
 		return fmt.Errorf("error with update user %v", err)
 	}
@@ -75,7 +89,10 @@ func (r *PRepository) SelectById(ctx context.Context, id string) (model.Person, 
 	p := model.Person{}
 	err := r.Pool.QueryRow(ctx, "select id,name,works,age,password from persons where id=$1", id).Scan(&p.ID, &p.Name, &p.Works, &p.Age, &p.Password)
 	if err != nil /*err==no-records*/ {
-		return p, fmt.Errorf("database error, select by id: %v", err) /*p, fmt.errorf("user with this id doesnt exist")*/
+		if err == pgx.ErrNoRows {
+			return model.Person{}, fmt.Errorf("user with this id doesnt exist: %v", err)
+		}
+		return model.Person{}, fmt.Errorf("database error, select by id: %v", err) /*p, fmt.errorf("user with this id doesnt exist")*/
 	}
 	return p, nil
 }
@@ -84,6 +101,9 @@ func (r *PRepository) SelectByIdAuth(ctx context.Context, id string) (model.Pers
 	err := r.Pool.QueryRow(ctx, "select id,refreshToken from persons where id=$1", id).Scan(&p.ID, &p.RefreshToken)
 
 	if err != nil /*err==no-records*/ {
+		if err == pgx.ErrNoRows {
+			return model.Person{}, fmt.Errorf("user with this id doesnt exist: %v", err)
+		}
 		return p, fmt.Errorf("database error, select by id: %v", err) /*p, fmt.errorf("user with this id doesnt exist")*/
 	}
 	return p, nil

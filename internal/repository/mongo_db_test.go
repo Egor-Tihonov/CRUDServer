@@ -1,15 +1,14 @@
 package repository
 
+/*
 import (
 	"awesomeProject/internal/model"
+	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"os"
-
-	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
+	"os"
 	"testing"
 )
 
@@ -154,3 +153,4 @@ func TestUpdateMongo(t *testing.T) {
 		require.Error(t, err, "update error")
 	}
 }
+*/

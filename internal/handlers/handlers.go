@@ -4,6 +4,7 @@ import (
 	"awesomeProject/internal/model"
 	"awesomeProject/internal/service"
 	"encoding/json"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	_ "strconv"
@@ -28,7 +29,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	}
 	err = h.s.UpdateUser(c.Request().Context(), id, &person)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("%v", err))
 	}
 	return c.JSON(http.StatusOK, "Ok")
 }

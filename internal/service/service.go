@@ -4,7 +4,6 @@ import (
 	"awesomeProject/internal/model"
 	"awesomeProject/internal/repository"
 	"context"
-	"fmt"
 )
 
 var JwtKey = []byte("super-key") //key fo generation and check tokens
@@ -27,9 +26,5 @@ func (s *Service) DeleteUser(ctx context.Context, id string) error { //delete us
 	return s.rps.Delete(ctx, id)
 }
 func (s *Service) GetUserById(ctx context.Context, id string) (model.Person, error) { //get one user by id
-	user, err := s.rps.SelectById(ctx, id)
-	if err != nil {
-		return model.Person{}, fmt.Errorf("serivce: error with select user by id: %v", err)
-	}
-	return user, nil
+	return s.rps.SelectById(ctx, id)
 }

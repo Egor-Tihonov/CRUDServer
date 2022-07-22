@@ -77,17 +77,17 @@ func (s *Service) UpdateUserAuth(ctx context.Context, id string, refreshToken st
 	return s.rps.UpdateAuth(ctx, id, refreshToken)
 }
 
-func (s *Service) Registration(ctx context.Context, person *model.Person) (error, string) { //users`s registration
+func (s *Service) Registration(ctx context.Context, person *model.Person) (string, error) { //users`s registration
 	hPassword, err := HashPassword(person.Password) //check password (authentication)
 	if err != nil {
-		return err, ""
+		return " ", err
 	}
 	person.Password = hPassword
 	newId, err := s.rps.Create(ctx, person)
 	if err != nil {
-		return fmt.Errorf("service: registration failed: %v", err), ""
+		return "", fmt.Errorf("service: registration failed: %v", err)
 	}
-	return nil, newId
+	return newId, nil
 }
 
 func HashPassword(password string) (string, error) {

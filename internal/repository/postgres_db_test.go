@@ -5,6 +5,8 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
+	"log"
+	"os"
 	"testing"
 )
 
@@ -20,7 +22,7 @@ func NewService(NewRps Repository) *Service { //create
 	return &Service{rps: NewRps}
 }
 
-/*func TestMain(m *testing.M) {
+func TestMain(m *testing.M) {
 	pool, err := pgxpool.Connect(context.Background(), "postgresql://postgres:123@localhost:5432/person")
 	if err != nil {
 		log.Fatalf("Bad connection: %v", err)
@@ -28,7 +30,7 @@ func NewService(NewRps Repository) *Service { //create
 	Pool = pool
 	run := m.Run()
 	os.Exit(run)
-}*/
+}
 
 func TestCreate(t *testing.T) {
 	testValidData := []model.Person{
@@ -47,7 +49,7 @@ func TestCreate(t *testing.T) {
 	}
 	testNoValidData := []model.Person{
 		{
-			Name:     "Egor",
+			Name:     "Ivan",
 			Works:    false,
 			Age:      18,
 			Password: "3",
@@ -146,11 +148,43 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 	for _, p := range testValidData {
-		err := rps.rps.Update(ctx, "bb839db7-4be3-41a8-a53b-403ad26593ca", &p)
+		err := rps.rps.Update(ctx, "25a64c4c-139f-4303-a83d-f31095a114af", &p)
 		require.NoError(t, err, "update error")
 	}
 	for _, p := range testNoValidData {
 		err := rps.rps.Update(ctx, "bb839db7-4be3-41a8-a53b-403ad26593ca", &p)
 		require.Error(t, err, "update error")
 	}
+	err := rps.rps.Update(ctx, "bb839db7-4be3-41a8-a53b-403ad26593ca", &testValidData[0])
+	require.Error(t, err, "update error")
+
+}
+func TestPRepository_UpdateAuth(t *testing.T) {
+	rps := NewService(&PRepository{Pool: Pool})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err := rps.rps.UpdateAuth(ctx, "25a64c4c-139f-4303-a83d-f31095a114af", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTg0OTk0NzgsImp0aSI6IjNhZjYyMjY5LTAxZmYtNGM2YS04MmUwLTBhNjIwZTVlY2ZmZCIsInVzZXJuYW1lIjoiRWdvclRpaG9ub3YifQ.d4kAjYeGkObPF-kcm7TaFRducO7rsUjabu_8h-Sy8ZE")
+	require.NoError(t, err, "thereis an error")
+	err = rps.rps.UpdateAuth(ctx, "3", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTg0OTk0NzgsImp0aSI6IjNhZjYyMjY5LTAxZmYtNGM2YS04MmUwLTBhNjIwZTVlY2ZmZCIsInVzZXJuYW1lIjoiRWdvclRpaG9ub3YifQ.d4kAjYeGkObPF-kcm7TaFRducO7rsUjabu_8h-Sy8ZE")
+	require.Error(t, err, "there isnt an error")
+
+}
+func TestPRepository_SelectByIdAuth(t *testing.T) {
+	rps := NewService(&PRepository{Pool: Pool})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	_, err := rps.rps.SelectByIdAuth(ctx, "25a64c4c-139f-4303-a83d-f31095a114af")
+	require.NoError(t, err, "there is an error")
+	_, err = rps.rps.SelectByIdAuth(ctx, "3")
+	require.Error(t, err, "there isn`t an error")
+}
+
+func TestPRepository_Delete(t *testing.T) {
+	rps := NewService(&PRepository{Pool: Pool})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	_, err := rps.rps.SelectByIdAuth(ctx, "25a64c4c-139f-4303-a83d-f31095a114af")
+	require.NoError(t, err, "there is an error")
+	_, err = rps.rps.SelectByIdAuth(ctx, "3")
+	require.Error(t, err, "there isn`t an error")
 }

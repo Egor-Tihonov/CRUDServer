@@ -20,7 +20,7 @@ func (h *Handler) Registration(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	err, newId := h.s.Registration(c.Request().Context(), &person)
+	newId, err := h.s.Registration(c.Request().Context(), &person)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
