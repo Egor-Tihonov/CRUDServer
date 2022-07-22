@@ -66,6 +66,9 @@ func CreateJWT(rps repository.Repository, person *model.Person, ctx context.Cont
 	claimsR["exp"] = time.Now().Add(time.Hour * 3).Unix()
 	claimsR["jti"] = person.ID
 	refreshTokenStr, err := refreshToken.SignedString(JwtKey)
+	if err != nil {
+		return "", "", fmt.Errorf("service: can't generate refresh token - %v", err)
+	}
 	err = rps.UpdateAuth(ctx, person.ID, refreshTokenStr) //add into user refresh token
 	if err != nil {
 		return "", "", fmt.Errorf("service: can't generate refresh token - %v", err)

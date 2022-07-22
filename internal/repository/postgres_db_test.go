@@ -99,6 +99,9 @@ func TestSelectAll(t *testing.T) {
 	_, err = Pool.Exec(ctx, "insert into persons(id,name,works,age,password) values($1,$2,$3,$4,$5)", &p.ID, &p.Name, &p.Works, &p.Age, &p.Password)
 	require.NoError(t, err, "select all: insert error")
 	users, err = rps.rps.SelectAll(ctx)
+	if err != nil {
+		log.Fatalf("error with select all: %v", err)
+	}
 	require.NotEqual(t, 5, len(users), "select all: the values are equals")
 
 }
