@@ -14,3 +14,8 @@ type Authentication struct {
 type RefreshTokens struct {
 	RefreshToken string `json:"refreshToken"`
 }
+type Response struct {
+	Message  string
+	FileType string
+	FileSize int64
+}

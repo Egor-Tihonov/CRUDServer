@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	_ "strconv"
 	"time"
 )
 
@@ -20,13 +19,6 @@ type Handler struct { //handler
 //NewHandler :define new handlers
 func NewHandler(NewS *service.Service) *Handler {
 	return &Handler{s: NewS}
-}
-
-type Response struct {
-	Message  string
-	FileName string
-	FileType string
-	FileSize int64
 }
 
 //UpdateUser handler:
@@ -96,9 +88,8 @@ func (h *Handler) Upload(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	return c.JSON(http.StatusOK, Response{
+	return c.JSON(http.StatusOK, model.Response{
 		Message:  "Success",
-		FileName: fileName,
 		FileType: fileType,
 		FileSize: file.Size,
 	})
