@@ -5,12 +5,19 @@ import (
 	"awesomeProject/internal/repository"
 	"context"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
+var validate = validator.New()
+
 func (s *Service) Authentication(ctx context.Context, id string, password string) (string, string, error) { //authentication
+	err := ValidateValue(password)
+	if err != nil {
+		return "", "", fmt.Errorf("service: error with auth")
+	}
 	authUser, err := s.rps.SelectById(ctx, id)
 	if err != nil {
 		return "", "", fmt.Errorf("service: authentication failed - %v", err)
@@ -81,6 +88,10 @@ func (s *Service) UpdateUserAuth(ctx context.Context, id string, refreshToken st
 }
 
 func (s *Service) Registration(ctx context.Context, person *model.Person) (string, error) { //users`s registration
+	err := ValidateStruct(person)
+	if err != nil {
+		return "", fmt.Errorf("service: error with creating new user,%v", err)
+	}
 	hPassword, err := HashPassword(person.Password) //check password (authentication)
 	if err != nil {
 		return " ", err
@@ -94,9 +105,6 @@ func (s *Service) Registration(ctx context.Context, person *model.Person) (strin
 }
 
 func HashPassword(password string) (string, error) {
-	if password == "" || password == " " {
-		return "", fmt.Errorf("service: password is equals to zero")
-	}
 	bytesPassword := []byte(password)
 	hashedBytesPassword, err := bcrypt.GenerateFromPassword(bytesPassword, bcrypt.DefaultCost)
 	if err != nil {
@@ -104,4 +112,20 @@ func HashPassword(password string) (string, error) {
 	}
 	hashPassword := string(hashedBytesPassword[:])
 	return hashPassword, nil
+}
+
+func ValidateStruct(person *model.Person) error {
+	err := validate.Struct(person)
+	if err != nil {
+		return fmt.Errorf("error with validate user, check your name(min length = 6),password(min length = 8) and age couldnt be less then 0 or greater than 200,~ %v", err)
+	}
+	return nil
+}
+
+func ValidateValue(password string) error {
+	err := validate.Var(password, "required,min=8")
+	if err != nil {
+		return fmt.Errorf("password length couldnt be less then 8,~%v", err)
+	}
+	return nil
 }

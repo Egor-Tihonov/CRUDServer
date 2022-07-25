@@ -7,6 +7,7 @@ import (
 	"awesomeProject/internal/service"
 	"context"
 	"fmt"
+
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -33,7 +34,7 @@ func main() {
 	h := handlers.NewHandler(rps)
 	e := echo.New()
 	e.GET("/users", h.GetAllUsers)
-	e.GET("/download", h.DownloadImage)
+	e.GET("/attachment", h.DownloadFile)
 	e.POST("/sign-up", h.Registration)
 	e.PUT("/usersUpdate/:id", h.UpdateUser, middleware.IsAuthenticated)
 	e.DELETE("/usersDelete/:id", h.DeleteUser, middleware.IsAuthenticated)

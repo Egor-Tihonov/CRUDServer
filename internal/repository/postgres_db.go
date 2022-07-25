@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
-
-	//"errors"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -88,7 +86,7 @@ func (r *PRepository) Update(ctx context.Context, id string, p *model.Person) er
 func (r *PRepository) SelectById(ctx context.Context, id string) (model.Person, error) {
 	p := model.Person{}
 	err := r.Pool.QueryRow(ctx, "select id,name,works,age,password from persons where id=$1", id).Scan(&p.ID, &p.Name, &p.Works, &p.Age, &p.Password)
-	if err != nil /*err==no-records*/ {
+	if err != nil {
 		if err == pgx.ErrNoRows {
 			return model.Person{}, fmt.Errorf("user with this id doesnt exist: %v", err)
 		}

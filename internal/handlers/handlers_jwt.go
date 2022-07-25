@@ -38,7 +38,7 @@ func (h *Handler) Authentication(c echo.Context) error {
 	}
 	accessToken, refreshToken, err := h.s.Authentication(c.Request().Context(), id, auth.Password)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, fmt.Errorf("error:%v", err)) //return c.JSON(http.StatusOk, err)
+		return c.JSON(http.StatusInternalServerError, fmt.Errorf("error:%v", err))
 	}
 	return c.JSONBlob(
 		http.StatusOK,

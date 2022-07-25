@@ -58,7 +58,11 @@ func (h *Handler) GetUserById(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, user)
 }
-
-func (h *Handler) DownloadImage(c echo.Context) error {
-	return c.File("https://ichef.bbci.co.uk/news/976/cpsprodpb/79F2/production/_123381213_06.jpg")
+func (h *Handler) DownloadFile(c echo.Context) error {
+	filename := c.QueryString()
+	err := c.Attachment(filename, "new_txt_file.txt")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, nil)
 }
