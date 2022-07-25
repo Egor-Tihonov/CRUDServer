@@ -5,12 +5,15 @@ import (
 	"awesomeProject/internal/service"
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 )
+
+var validate = validator.New()
 
 type Handler struct { //handler
 	s *service.Service
@@ -25,7 +28,11 @@ func NewHandler(NewS *service.Service) *Handler {
 func (h *Handler) UpdateUser(c echo.Context) error {
 	person := model.Person{}
 	id := c.Param("id")
-	err := json.NewDecoder(c.Request().Body).Decode(&person)
+	err := ValidateValueID(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	err = json.NewDecoder(c.Request().Body).Decode(&person)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
@@ -38,7 +45,11 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 
 func (h *Handler) DeleteUser(c echo.Context) error {
 	id := c.Param("id")
-	err := h.s.DeleteUser(c.Request().Context(), id)
+	err := ValidateValueID(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	err = h.s.DeleteUser(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
@@ -54,6 +65,10 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 }
 func (h *Handler) GetUserById(c echo.Context) error {
 	id := c.Param("id")
+	err := ValidateValueID(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
 	user, err := h.s.GetUserById(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
@@ -93,4 +108,11 @@ func (h *Handler) Upload(c echo.Context) error {
 		FileType: fileType,
 		FileSize: file.Size,
 	})
+}
+func ValidateValueID(id string) error {
+	err := validate.Var(id, "required, min=36")
+	if err != nil {
+		return fmt.Errorf("id length couldnt be less then 36,~%v", err)
+	}
+	return nil
 }

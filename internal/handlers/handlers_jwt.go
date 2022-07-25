@@ -13,6 +13,10 @@ import (
 func (h *Handler) Registration(c echo.Context) error {
 	person := model.Person{}
 	err := json.NewDecoder(c.Request().Body).Decode(&person)
+	err = ValidateStruct(&person)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
@@ -32,7 +36,11 @@ func (h *Handler) Registration(c echo.Context) error {
 func (h *Handler) Authentication(c echo.Context) error {
 	auth := model.Authentication{}
 	id := c.Param("id")
-	err := json.NewDecoder(c.Request().Body).Decode(&auth)
+	err := ValidateValueID(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "id cant be empty")
+	}
+	err = json.NewDecoder(c.Request().Body).Decode(&auth)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, fmt.Errorf("handlers: cannot decode json file"))
 	}
@@ -72,12 +80,20 @@ func (h *Handler) RefreshToken(c echo.Context) error {
 }
 func (h *Handler) Logout(c echo.Context) error {
 	id := c.Param("id")
-	if id == "" || id == " " {
+	err := ValidateValueID(id)
+	if err != nil {
 		return c.JSON(http.StatusBadRequest, "id cant be empty")
 	}
-	err := h.s.UpdateUserAuth(c.Request().Context(), id, "")
+	err = h.s.UpdateUserAuth(c.Request().Context(), id, "")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 	return c.JSON(http.StatusOK, "logout")
+}
+func ValidateStruct(person *model.Person) error {
+	err := validate.Struct(person)
+	if err != nil {
+		return fmt.Errorf("error with validate user, check your name(min length = 6),password(min length = 8) and age couldnt be less then 0 or greater than 200,~ %v", err)
+	}
+	return nil
 }
