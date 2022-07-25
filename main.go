@@ -42,6 +42,7 @@ func main() {
 	e.POST("/logout/:id", h.Logout, middleware.IsAuthenticated)
 	e.GET("/users/:id", h.GetUserById, middleware.IsAuthenticated)
 	e.GET("/refreshToken", h.RefreshToken, middleware.IsAuthenticated)
+	e.POST("/upload", h.Upload)
 	err := e.Start(":8080")
 	if err != nil {
 		fmt.Println(err)

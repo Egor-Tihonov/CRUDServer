@@ -6,8 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 	_ "strconv"
+	"time"
 )
 
 type Handler struct { //handler
@@ -17,6 +20,13 @@ type Handler struct { //handler
 //NewHandler :define new handlers
 func NewHandler(NewS *service.Service) *Handler {
 	return &Handler{s: NewS}
+}
+
+type Response struct {
+	Message  string
+	FileName string
+	FileType string
+	FileSize int64
 }
 
 //UpdateUser handler:
@@ -65,4 +75,31 @@ func (h *Handler) DownloadFile(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 	return c.JSON(http.StatusOK, nil)
+}
+func (h *Handler) Upload(c echo.Context) error {
+	var fileName, fileType string
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	src, err := file.Open()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	fileByte, err := ioutil.ReadAll(src)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	fileType = http.DetectContentType(fileByte)
+	fileName = "uploads/" + strconv.FormatInt(time.Now().Unix(), 10) + ".jpg"
+	err = ioutil.WriteFile(fileName, fileByte, 0777)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	return c.JSON(http.StatusOK, Response{
+		Message:  "Success",
+		FileName: fileName,
+		FileType: fileType,
+		FileSize: file.Size,
+	})
 }
