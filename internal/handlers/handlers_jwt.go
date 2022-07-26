@@ -12,7 +12,11 @@ import (
 //Registration : create new model.person and read information about it from JSON
 func (h *Handler) Registration(c echo.Context) error {
 	person := model.Person{}
-	err := json.NewDecoder(c.Request().Body).Decode(&person)
+	err := ValidateStruct(&person)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	err = json.NewDecoder(c.Request().Body).Decode(&person)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
@@ -82,4 +86,11 @@ func (h *Handler) Logout(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 	return c.JSON(http.StatusOK, "logout")
+}
+func ValidateStruct(person *model.Person) error {
+	err := validate.Struct(person)
+	if err != nil {
+		return fmt.Errorf("error with validate user, check your name(min length = 6),password(min length = 8) and age couldnt be less then 0 or greater than 200,~ %v", err)
+	}
+	return nil
 }
