@@ -52,11 +52,11 @@ func (s *Service) RefreshToken(ctx context.Context, refreshTokenString string) (
 }
 
 func CreateJWT(rps repository.Repository, person *model.Person, ctx context.Context) (string, string, error) {
-	accessToken := jwt.New(jwt.SigningMethodHS256)           //encrypt access token by SigningMethodHS256 method
-	claimsA := accessToken.Claims.(jwt.MapClaims)            //fill access-token`s claims
-	claimsA["exp"] = time.Now().Add(15 * time.Minute).Unix() //work time
-	claimsA["username"] = person.Name                        //payload
-	accessTokenStr, err := accessToken.SignedString(JwtKey)  //convert token to string format
+	accessToken := jwt.New(jwt.SigningMethodHS256)          //encrypt access token by SigningMethodHS256 method
+	claimsA := accessToken.Claims.(jwt.MapClaims)           //fill access-token`s claims
+	claimsA["exp"] = time.Now().Add(5 * time.Minute).Unix() //work time
+	claimsA["username"] = person.Name                       //payload
+	accessTokenStr, err := accessToken.SignedString(JwtKey) //convert token to string format
 	if err != nil {
 		return "", "", fmt.Errorf("service: can't generate access token - %v", err)
 	}
@@ -86,6 +86,7 @@ func (s *Service) Registration(ctx context.Context, person *model.Person) (strin
 		return " ", err
 	}
 	person.Password = hPassword
+
 	newId, err := s.rps.Create(ctx, person)
 	if err != nil {
 		return "", fmt.Errorf("service: registration failed: %v", err)

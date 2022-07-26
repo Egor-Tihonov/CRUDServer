@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"awesomeProject/internal/cache"
 	"awesomeProject/internal/model"
 	"awesomeProject/internal/service"
 	"encoding/json"
@@ -16,12 +17,13 @@ import (
 var validate = validator.New()
 
 type Handler struct { //handler
-	s *service.Service
+	s         *service.Service
+	userCache *cache.UserCache
 }
 
 //NewHandler :define new handlers
-func NewHandler(NewS *service.Service) *Handler {
-	return &Handler{s: NewS}
+func NewHandler(NewS *service.Service, userCache *cache.UserCache) *Handler {
+	return &Handler{s: NewS, userCache: userCache}
 }
 
 //UpdateUser handler:
@@ -69,9 +71,20 @@ func (h *Handler) GetUserById(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	user, err := h.s.GetUserById(c.Request().Context(), id)
+	err, user, found := h.userCache.GetUserByIdFromCache(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
+	}
+	if !found {
+		person, err := h.s.GetUserById(c.Request().Context(), id)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+		err = h.userCache.AddToCache(c.Request().Context(), person)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+		return c.JSON(http.StatusOK, person)
 	}
 	return c.JSON(http.StatusOK, user)
 }
@@ -110,7 +123,7 @@ func (h *Handler) Upload(c echo.Context) error {
 	})
 }
 func ValidateValueID(id string) error {
-	err := validate.Var(id, "required, min=36")
+	err := validate.Var(id, "required")
 	if err != nil {
 		return fmt.Errorf("id length couldnt be less then 36,~%v", err)
 	}

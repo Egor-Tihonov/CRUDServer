@@ -17,7 +17,6 @@ func NewService(NewRps repository.Repository) *Service { //create
 }
 
 func (s *Service) UpdateUser(ctx context.Context, id string, person *model.Person) error { //update user
-
 	return s.rps.Update(ctx, id, person)
 }
 func (s *Service) SelectAllUsers(ctx context.Context) ([]*model.Person, error) { //get all users from DB without passwords and tokens
@@ -27,6 +26,5 @@ func (s *Service) DeleteUser(ctx context.Context, id string) error { //delete us
 	return s.rps.Delete(ctx, id)
 }
 func (s *Service) GetUserById(ctx context.Context, id string) (model.Person, error) { //get one user by id
-
 	return s.rps.SelectById(ctx, id)
 }
