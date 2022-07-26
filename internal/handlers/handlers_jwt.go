@@ -4,9 +4,10 @@ import (
 	"awesomeProject/internal/model"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
-	"net/http"
 )
 
 //Registration : create new model.person and read information about it from JSON
@@ -81,5 +82,7 @@ func (h *Handler) Logout(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
+
+	h.s.DeleteFromCache()
 	return c.JSON(http.StatusOK, "logout")
 }

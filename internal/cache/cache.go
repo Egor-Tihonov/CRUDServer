@@ -3,9 +3,10 @@ package cache
 import (
 	"awesomeProject/internal/model"
 	"context"
-	"github.com/go-redis/redis/v9"
 	"strconv"
 	"time"
+
+	"github.com/go-redis/redis/v9"
 )
 
 type UserCache struct {
@@ -24,10 +25,14 @@ func (userCache *UserCache) AddToCache(ctx context.Context, person model.Person)
 	return nil
 }
 
-func (userCache *UserCache) GetUserByIdFromCache(ctx context.Context) (error, string, bool) {
-	order, err := userCache.redisClient.Get(ctx, "user").Result()
+func (userCache *UserCache) GetUserByIdFromCache(ctx context.Context) (string, bool, error) {
+	user, err := userCache.redisClient.Get(ctx, "user").Result()
 	if err == redis.Nil {
-		return nil, "", false
+		return "", false, nil
 	}
-	return nil, order, true
+	return user, true, nil
+}
+
+func (UserCache *UserCache) DeleteFromCache() {
+	UserCache.redisClient.Del(context.Background(), "user")
 }

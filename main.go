@@ -8,6 +8,7 @@ import (
 	"awesomeProject/internal/service"
 	"context"
 	"fmt"
+
 	"github.com/go-redis/redis/v9"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -39,8 +40,8 @@ func main() {
 		}
 	}()
 	c := cache.NewCache(rdsClient)
-	rps := service.NewService(conn)
-	h := handlers.NewHandler(rps, c)
+	rps := service.NewService(conn, c)
+	h := handlers.NewHandler(rps)
 	e.GET("/users", h.GetAllUsers)
 	e.GET("/attachment", h.DownloadFile)
 	e.POST("/sign-up", h.Registration)
