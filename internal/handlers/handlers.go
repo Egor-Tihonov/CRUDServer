@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -34,7 +35,8 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	}
 	err = json.NewDecoder(c.Request().Body).Decode(&person)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		log.Errorf("failed parse json, %e", err)
+		return err
 	}
 	err = h.s.UpdateUser(c.Request().Context(), id, &person)
 	if err != nil {
@@ -50,6 +52,9 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 	err = h.s.DeleteUser(c.Request().Context(), id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
 	err = h.s.DeleteUserFromCache(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)

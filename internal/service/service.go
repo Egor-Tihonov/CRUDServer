@@ -20,7 +20,15 @@ func NewService(NewRps repository.Repository, userCache *cache.UserCache) *Servi
 }
 
 func (s *Service) UpdateUser(ctx context.Context, id string, person *model.Person) error { //update user
-	return s.rps.Update(ctx, id, person)
+	err := s.rps.Update(ctx, id, person)
+	if err != nil {
+		return fmt.Errorf("failed to update users, %e", err)
+	}
+	err = s.userCache.AddToCache(ctx, person)
+	if err != nil {
+		return fmt.Errorf("failed to add update users into the cache, %e", err)
+	}
+	return nil
 }
 func (s *Service) SelectAllUsers(ctx context.Context) ([]*model.Person, error) { //get all users from DB without passwords and tokens
 	users, err := s.rps.SelectAll(ctx)

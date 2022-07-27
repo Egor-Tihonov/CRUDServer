@@ -7,20 +7,20 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	log "github.com/sirupsen/logrus"
 )
 
 type PRepository struct { //postgres
 	Pool *pgxpool.Pool
 }
 
-//var no-records:=errors.New("no rows in result set")
-
 //Create : insert new user into database
 func (r *PRepository) Create(ctx context.Context, person *model.Person) (string, error) {
 	newID := uuid.New().String()
 	_, err := r.Pool.Exec(ctx, "insert into persons(id,name,works,age,password) values($1,$2,$3,$4,$5)", newID, &person.Name, &person.Works, &person.Age, &person.Password)
 	if err != nil {
-		return "", fmt.Errorf("database error with create user: %v", err)
+		log.Errorf("database error with create user: %v", err)
+		return "", err
 	}
 	return newID, nil
 }
@@ -30,19 +30,21 @@ func (r *PRepository) SelectAll(ctx context.Context) ([]*model.Person, error) {
 	var persons []*model.Person
 	rows, err := r.Pool.Query(ctx, "select id,name,works,age from persons")
 	if err != nil {
-		return nil, fmt.Errorf("database error with select all users: %v", err)
+		log.Errorf("database error with select all users, %v", err)
+		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		p := model.Person{}
 		err := rows.Scan(&p.ID, &p.Name, &p.Works, &p.Age)
 		if err != nil {
-			return nil, fmt.Errorf("database error %v", err)
+			log.Errorf("database error with select all users, %v", err)
+			return nil, err
 		}
 		persons = append(persons, &p)
 	}
 
-	return persons, err
+	return persons, nil
 }
 
 //Delete : delete user by his ID
@@ -55,7 +57,8 @@ func (r *PRepository) Delete(ctx context.Context, id string) error {
 		if err == pgx.ErrNoRows {
 			return fmt.Errorf("user with this id doesnt exist: %v", err)
 		}
-		return fmt.Errorf("error delete user %v", err)
+		log.Errorf("error with delete user %v", err)
+		return err
 	}
 	return nil
 }
@@ -67,7 +70,8 @@ func (r *PRepository) UpdateAuth(ctx context.Context, id string, refreshToken st
 		return fmt.Errorf("user with this id doesnt exist")
 	}
 	if err != nil {
-		return fmt.Errorf("error with update user %v", err)
+		log.Errorf("error with update user %v", err)
+		return err
 	}
 	return nil
 }
@@ -77,7 +81,8 @@ func (r *PRepository) Update(ctx context.Context, id string, p *model.Person) er
 		return fmt.Errorf("user with this id doesnt exist")
 	}
 	if err != nil {
-		return fmt.Errorf("error with update user %v", err)
+		log.Errorf("error with update user %v", err)
+		return err
 	}
 	return nil
 }
@@ -90,7 +95,8 @@ func (r *PRepository) SelectById(ctx context.Context, id string) (model.Person, 
 		if err == pgx.ErrNoRows {
 			return model.Person{}, fmt.Errorf("user with this id doesnt exist: %v", err)
 		}
-		return model.Person{}, fmt.Errorf("database error, select by id: %v", err) /*p, fmt.errorf("user with this id doesnt exist")*/
+		log.Errorf("database error, select by id: %v", err)
+		return model.Person{}, err /*p, fmt.errorf("user with this id doesnt exist")*/
 	}
 	return p, nil
 }
@@ -102,7 +108,8 @@ func (r *PRepository) SelectByIdAuth(ctx context.Context, id string) (model.Pers
 		if err == pgx.ErrNoRows {
 			return model.Person{}, fmt.Errorf("user with this id doesnt exist: %v", err)
 		}
-		return p, fmt.Errorf("database error, select by id: %v", err) /*p, fmt.errorf("user with this id doesnt exist")*/
+		log.Errorf("database error, select by id: %v", err)
+		return model.Person{}, err /*p, fmt.errorf("user with this id doesnt exist")*/
 	}
 	return p, nil
 }

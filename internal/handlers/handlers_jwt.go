@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -18,10 +18,8 @@ func (h *Handler) Registration(c echo.Context) error {
 	}
 	err = json.NewDecoder(c.Request().Body).Decode(&person)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
-	}
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		log.Errorf("failed parse json, %e", err)
+		return err
 	}
 	newId, err := h.s.Registration(c.Request().Context(), &person)
 	if err != nil {
@@ -39,11 +37,12 @@ func (h *Handler) Authentication(c echo.Context) error {
 	}
 	err = json.NewDecoder(c.Request().Body).Decode(&auth)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, fmt.Errorf("handlers: cannot decode json file"))
+		log.Errorf("failed parse json, %e", err)
+		return err
 	}
 	accessToken, refreshToken, err := h.s.Authentication(c.Request().Context(), id, auth.Password)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, fmt.Errorf("error:%v", err))
+		return c.JSON(http.StatusInternalServerError, fmt.Errorf("error with authentication: %e", err))
 	}
 	return c.JSONBlob(
 		http.StatusOK,
@@ -59,12 +58,12 @@ func (h *Handler) RefreshToken(c echo.Context) error {
 	refreshToken := model.RefreshTokens{}
 	err := json.NewDecoder(c.Request().Body).Decode(&refreshToken)
 	if err != nil {
+		log.Errorf("failed parse json, %e", err)
 		return err
 	}
 	newAccessTokenString, newRefreshTokenString, err := h.s.RefreshToken(c.Request().Context(), refreshToken.RefreshToken)
 	if err != nil {
-		log.Errorf("handler: token refresh failed - %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "error while creating tokens")
+		return c.JSON(http.StatusInternalServerError, fmt.Errorf("error while creating tokens, %e", err))
 	}
 	return c.JSONBlob(
 		http.StatusOK,

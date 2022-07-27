@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -31,7 +32,8 @@ func (s *Service) RefreshToken(ctx context.Context, refreshTokenString string) (
 		return JwtKey, nil
 	}) //parse it into string format
 	if err != nil {
-		return "", "", fmt.Errorf("service: can't parse refresh token - %w", err)
+		log.Errorf("service: can't parse refresh token - %e", err)
+		return "", "", err
 	}
 	if !refreshToken.Valid {
 		return "", "", fmt.Errorf("service: expired refresh token")
@@ -39,11 +41,11 @@ func (s *Service) RefreshToken(ctx context.Context, refreshTokenString string) (
 	claims := refreshToken.Claims.(jwt.MapClaims)
 	userUUID := claims["jti"]
 	if userUUID == "" {
-		return "", "", fmt.Errorf("service: error while parsing claims")
+		return "", "", fmt.Errorf("service: error while parsing claims, ID coulndt be empty")
 	}
 	person, err := s.rps.SelectByIdAuth(ctx, userUUID.(string))
 	if err != nil {
-		return "", "", fmt.Errorf("service: token refresh failed - %w", err)
+		return "", "", fmt.Errorf("service: token refresh failed - %e", err)
 	}
 	if refreshTokenString != person.RefreshToken {
 		return "", "", fmt.Errorf("service: invalid refresh token")
@@ -58,7 +60,8 @@ func (s *Service) CreateJWT(rps repository.Repository, person *model.Person, ctx
 	claimsA["username"] = person.Name                       //payload
 	accessTokenStr, err := accessToken.SignedString(JwtKey) //convert token to string format
 	if err != nil {
-		return "", "", fmt.Errorf("service: can't generate access token - %v", err)
+		log.Errorf("service: can't generate access token - %v", err)
+		return "", "", err
 	}
 	refreshToken := jwt.New(jwt.SigningMethodHS256)
 	claimsR := refreshToken.Claims.(jwt.MapClaims)
@@ -67,11 +70,13 @@ func (s *Service) CreateJWT(rps repository.Repository, person *model.Person, ctx
 	claimsR["jti"] = person.ID
 	refreshTokenStr, err := refreshToken.SignedString(JwtKey)
 	if err != nil {
-		return "", "", fmt.Errorf("service: can't generate refresh token - %v", err)
+		log.Errorf("service: can't generate access token - %v", err)
+		return "", "", err
 	}
 	err = rps.UpdateAuth(ctx, person.ID, refreshTokenStr) //add into user refresh token
 	if err != nil {
-		return "", "", fmt.Errorf("service: can't generate refresh token - %v", err)
+		log.Errorf("service: can't generate access token - %v", err)
+		return "", "", err
 	}
 	return accessTokenStr, refreshTokenStr, nil
 }
@@ -81,12 +86,11 @@ func (s *Service) UpdateUserAuth(ctx context.Context, id string, refreshToken st
 }
 
 func (s *Service) Registration(ctx context.Context, person *model.Person) (string, error) { //users`s registration
-	hPassword, err := HashPassword(person.Password) //check password (authentication)
+	hPassword, err := HashPassword(person.Password)
 	if err != nil {
 		return " ", err
 	}
 	person.Password = hPassword
-
 	newId, err := s.rps.Create(ctx, person)
 	if err != nil {
 		return "", fmt.Errorf("service: registration failed: %v", err)

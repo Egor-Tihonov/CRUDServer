@@ -4,8 +4,8 @@ import (
 	"awesomeProject/internal/model"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/go-redis/redis/v9"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -20,7 +20,8 @@ func NewCache(rdsClient *redis.Client) *UserCache {
 func (userCache *UserCache) AddToCache(ctx context.Context, person *model.Person) error {
 	user, err := json.Marshal(person)
 	if err != nil {
-		return fmt.Errorf("cache: failed add user to cache, %e", err)
+		log.Errorf("cache: failed add user to cache, %e", err)
+		return err
 	}
 	err = userCache.redisClient.XAdd(ctx, &redis.XAddArgs{
 		Stream: "user",
@@ -28,7 +29,8 @@ func (userCache *UserCache) AddToCache(ctx context.Context, person *model.Person
 		Values: map[string]interface{}{"About": user},
 	}).Err()
 	if err != nil {
-		return fmt.Errorf("cache: failed add user to cache, %e", err)
+		log.Errorf("cache: failed add user to cache, %e", err)
+		return err
 	}
 	/*err = userCache.redisClient.Set(ctx, "user", user, 12*time.Minute).Err()
 	if err != nil {
@@ -47,7 +49,8 @@ func (userCache *UserCache) GetUserByIdFromCache(ctx context.Context) (model.Per
 		if err == redis.Nil {
 			return model.Person{}, false, nil
 		}
-		return model.Person{}, false, fmt.Errorf("failed get user by id from cache: %e", err)
+		log.Errorf("failed get user by id from cache: %e", err)
+		return model.Person{}, false, err
 	}
 	bytes := result[0].Messages[0]
 	msg := bytes.Values
@@ -55,7 +58,8 @@ func (userCache *UserCache) GetUserByIdFromCache(ctx context.Context) (model.Per
 	person := model.Person{}
 	err = json.Unmarshal([]byte(msgString), &person)
 	if err != nil {
-		fmt.Print(err)
+		log.Errorf("failed get user by id from cache: %e", err)
+		return model.Person{}, false, err
 	}
 	return person, true, nil
 }
@@ -67,7 +71,8 @@ func (userCache *UserCache) DeleteUserFromCache(ctx context.Context) error {
 	return nil*/
 	err := userCache.redisClient.FlushAll(ctx).Err()
 	if err != nil {
-		return fmt.Errorf("failed to delete user from cache")
+		log.Errorf("failed to delete user from cache, %e", err)
+		return err
 	}
 	return nil
 }
@@ -90,7 +95,8 @@ func (userCache *UserCache) GetAllUsersFromCache(ctx context.Context) ([]*model.
 		if err == redis.Nil {
 			return nil, false, nil
 		}
-		return nil, false, fmt.Errorf("failed get user by id from cache: %e", err)
+		log.Errorf("failed get user by id from cache: %e", err)
+		return nil, false, err
 	}
 	bytes := result[0].Messages[0]
 	msg := bytes.Values
@@ -99,7 +105,8 @@ func (userCache *UserCache) GetAllUsersFromCache(ctx context.Context) ([]*model.
 
 	err = json.Unmarshal([]byte(msgString), &persons)
 	if err != nil {
-		fmt.Print(err)
+		log.Errorf("failed to unmarshal json, %e", err)
+		return nil, false, err
 	}
 
 	return persons, true, nil
@@ -118,7 +125,8 @@ func (userCache *UserCache) AddAllUsersToCache(person []*model.Person, ctx conte
 
 	user, err := json.Marshal(person)
 	if err != nil {
-		return fmt.Errorf("cache: failed add user to cache, %e", err)
+		log.Error("cache: failed add all users to cache, %e", err)
+		return err
 	}
 	err = userCache.redisClient.XAdd(ctx, &redis.XAddArgs{
 		Stream: "all-users",
@@ -126,7 +134,8 @@ func (userCache *UserCache) AddAllUsersToCache(person []*model.Person, ctx conte
 		Values: map[string]interface{}{"About": user},
 	}).Err()
 	if err != nil {
-		return fmt.Errorf("cache: failed add user to cache, %e", err)
+		log.Error("cache: failed add all users to cache, %e", err)
+		return err
 	}
 	return nil
 }

@@ -8,7 +8,6 @@ import (
 	"awesomeProject/internal/repository"
 	"awesomeProject/internal/service"
 	"context"
-	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/go-redis/redis/v9"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -27,7 +26,7 @@ func main() {
 	cfg := model.Config{}
 	err := env.Parse(&cfg)
 	if err != nil {
-		log.Errorf("error: %e", err)
+		log.Fatalln("failed to start service, %e", err)
 	}
 	e := echo.New()
 	rdsClient := redisConnection(&cfg)
@@ -58,7 +57,7 @@ func main() {
 	e.POST("/upload", h.Upload)
 	err = e.Start(":8080")
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalln("failed to start service, %e", err)
 	}
 
 }
