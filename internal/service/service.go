@@ -37,19 +37,24 @@ func (s *Service) DeleteUser(ctx context.Context, id string) error { //delete us
 	return s.rps.Delete(ctx, id)
 }
 func (s *Service) GetUserById(ctx context.Context, id string) (model.Person, error) { //get one user by id
-	return s.rps.SelectById(ctx, id)
+	user, err := s.rps.SelectById(ctx, id)
+	if err != nil {
+		return model.Person{}, fmt.Errorf("failed to select all users from db, %e", err)
+	}
+	err = s.userCache.AddToCache(ctx, &user)
+	if err != nil {
+		return model.Person{}, fmt.Errorf("failed to add users into the cache, %e", err)
+	}
+	return user, nil
 }
-func (s *Service) GetUserFromCache(ctx context.Context) (string, bool, error) {
+func (s *Service) GetUserFromCache(ctx context.Context) (model.Person, bool, error) {
 	return s.userCache.GetUserByIdFromCache(ctx)
 }
-func (s *Service) GetAllUsersFromCache(ctx context.Context) (string, bool, error) {
+func (s *Service) GetAllUsersFromCache(ctx context.Context) ([]*model.Person, bool, error) {
 	return s.userCache.GetAllUsersFromCache(ctx)
 }
 func (s *Service) DeleteUserFromCache(ctx context.Context) error {
-	return s.userCache.DeleteUsersFromCache(ctx)
-}
-func (s *Service) DeleteAllUsersFromCache(ctx context.Context) error {
-	return s.userCache.DeleteUsersFromCache(ctx)
+	return s.userCache.DeleteUserFromCache(ctx)
 }
 func (s *Service) AddUsersToCache(person []*model.Person, ctx context.Context) error {
 	return s.userCache.AddAllUsersToCache(person, ctx)

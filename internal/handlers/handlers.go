@@ -69,7 +69,7 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 		}
 		return c.JSON(http.StatusOK, p)
 	}
-	return c.String(http.StatusOK, users)
+	return c.JSON(http.StatusOK, users)
 }
 func (h *Handler) GetUserById(c echo.Context) error {
 	id := c.Param("id")
@@ -79,9 +79,7 @@ func (h *Handler) GetUserById(c echo.Context) error {
 	}
 	user, found, err := h.s.GetUserFromCache(c.Request().Context())
 	if err != nil {
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err)
-		}
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 	if !found {
 		person, err := h.s.GetUserById(c.Request().Context(), id)
@@ -91,7 +89,7 @@ func (h *Handler) GetUserById(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, person)
 	}
-	return c.String(http.StatusOK, user)
+	return c.JSON(http.StatusOK, user)
 
 }
 func (h *Handler) DownloadFile(c echo.Context) error {

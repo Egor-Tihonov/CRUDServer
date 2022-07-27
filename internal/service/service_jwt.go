@@ -73,10 +73,6 @@ func (s *Service) CreateJWT(rps repository.Repository, person *model.Person, ctx
 	if err != nil {
 		return "", "", fmt.Errorf("service: can't generate refresh token - %v", err)
 	}
-	err = s.userCache.AddToCache(ctx, person)
-	if err != nil {
-		return "", "", fmt.Errorf("service: can't add user into the cache - %v", err)
-	}
 	return accessTokenStr, refreshTokenStr, nil
 }
 
