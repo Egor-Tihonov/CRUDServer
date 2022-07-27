@@ -19,3 +19,11 @@ type Response struct {
 	FileType string
 	FileSize int64
 }
+
+type Config struct {
+	CurrentDB     string `env:"CURRENT_DB" envDefault:"postgres"`
+	Password      string `env:"PASSWORD"`
+	PostgresDbUrl string `env:"POSTGRES_DB_URL"`
+	MongoDbUrl    string `env:"MONGO_DB_URL"`
+	RedisURL      string `env:"REDIS_DB_URL" env:"localhost:6379"`
+}

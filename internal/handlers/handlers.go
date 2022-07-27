@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"awesomeProject/internal/cache"
 	"awesomeProject/internal/model"
 	"awesomeProject/internal/service"
 	"encoding/json"
@@ -17,13 +16,12 @@ import (
 var validate = validator.New()
 
 type Handler struct { //handler
-	s         *service.Service
-	userCache *cache.UserCache
+	s *service.Service
 }
 
 //NewHandler :define new handlers
-func NewHandler(NewS *service.Service, userCache *cache.UserCache) *Handler {
-	return &Handler{s: NewS, userCache: userCache}
+func NewHandler(NewS *service.Service) *Handler {
+	return &Handler{s: NewS}
 }
 
 //UpdateUser handler:
@@ -52,6 +50,7 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 	err = h.s.DeleteUser(c.Request().Context(), id)
+	err = h.s.DeleteUserFromCache(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
@@ -59,11 +58,18 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 }
 
 func (h *Handler) GetAllUsers(c echo.Context) error {
-	p, err := h.s.SelectAllUsers(c.Request().Context())
+	users, found, err := h.s.GetAllUsersFromCache(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, p)
+	if !found {
+		p, err := h.s.SelectAllUsers(c.Request().Context())
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+		return c.JSON(http.StatusOK, p)
+	}
+	return c.String(http.StatusOK, users)
 }
 func (h *Handler) GetUserById(c echo.Context) error {
 	id := c.Param("id")
@@ -71,22 +77,22 @@ func (h *Handler) GetUserById(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	err, user, found := h.userCache.GetUserByIdFromCache(c.Request().Context())
+	user, found, err := h.s.GetUserFromCache(c.Request().Context())
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
 	}
 	if !found {
 		person, err := h.s.GetUserById(c.Request().Context(), id)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
-		err = h.userCache.AddToCache(c.Request().Context(), person)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err)
-		}
+
 		return c.JSON(http.StatusOK, person)
 	}
-	return c.JSON(http.StatusOK, user)
+	return c.String(http.StatusOK, user)
+
 }
 func (h *Handler) DownloadFile(c echo.Context) error {
 	filename := c.QueryString()

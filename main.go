@@ -4,12 +4,13 @@ import (
 	"awesomeProject/internal/cache"
 	"awesomeProject/internal/handlers"
 	"awesomeProject/internal/middleware"
+	"awesomeProject/internal/model"
 	"awesomeProject/internal/repository"
 	"awesomeProject/internal/service"
 	"context"
 	"fmt"
+	"github.com/caarlos0/env/v6"
 	"github.com/go-redis/redis/v9"
-
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
@@ -23,10 +24,14 @@ var (
 )
 
 func main() {
-	dbname := "postgres"
+	cfg := model.Config{}
+	err := env.Parse(&cfg)
+	if err != nil {
+		log.Errorf("error: %e", err)
+	}
 	e := echo.New()
-	rdsClient := redisConnection()
-	conn := DbConnection(dbname)
+	rdsClient := redisConnection(&cfg)
+	conn := DbConnection(&cfg)
 	defer func() {
 		err := rdsClient.Close()
 		if err != nil {
@@ -39,8 +44,8 @@ func main() {
 		}
 	}()
 	c := cache.NewCache(rdsClient)
-	rps := service.NewService(conn)
-	h := handlers.NewHandler(rps, c)
+	rps := service.NewService(conn, c)
+	h := handlers.NewHandler(rps)
 	e.GET("/users", h.GetAllUsers)
 	e.GET("/attachment", h.DownloadFile)
 	e.POST("/sign-up", h.Registration)
@@ -51,16 +56,17 @@ func main() {
 	e.GET("/users/:id", h.GetUserById, middleware.IsAuthenticated)
 	e.GET("/refreshToken", h.RefreshToken, middleware.IsAuthenticated)
 	e.POST("/upload", h.Upload)
-	err := e.Start(":8080")
+	err = e.Start(":8080")
 	if err != nil {
 		fmt.Println(err)
 	}
+
 }
 
-func DbConnection(_dbname string) repository.Repository {
-	switch _dbname {
+func DbConnection(cfg *model.Config) repository.Repository {
+	switch cfg.CurrentDB {
 	case "postgres":
-		poolP, err := pgxpool.Connect(context.Background(), "postgresql://postgres:123@localhost:5432/person")
+		poolP, err := pgxpool.Connect(context.Background() /*cfg.PostgresDbUrl */, "postgresql://postgres:123@localhost:5432/person")
 		if err != nil {
 			log.Errorf("bad connection with postgresql: %v", err)
 			return nil
@@ -68,7 +74,7 @@ func DbConnection(_dbname string) repository.Repository {
 		return &repository.PRepository{Pool: poolP}
 
 	case "mongo":
-		poolM, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://127.0.0.1:27017"))
+		poolM, err := mongo.Connect(context.Background(), options.Client().ApplyURI(cfg.MongoDbUrl /*"mongodb://127.0.0.1:27017"*/))
 		if err != nil {
 			log.Errorf("bad connection with mongoDb: %v", err)
 			return nil
@@ -78,9 +84,9 @@ func DbConnection(_dbname string) repository.Repository {
 	}
 	return nil
 }
-func redisConnection() *redis.Client {
+func redisConnection(cfg *model.Config) *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     cfg.RedisURL, /*"localhost:6379"*/
 		Password: "",
 		DB:       0,
 	})

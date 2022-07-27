@@ -81,6 +81,10 @@ func (h *Handler) Logout(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "id cant be empty")
 	}
+	err = h.s.DeleteUserFromCache(c.Request().Context())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, fmt.Errorf("failed delete user from cache, %e", err))
+	}
 	err = h.s.UpdateUserAuth(c.Request().Context(), id, "")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)

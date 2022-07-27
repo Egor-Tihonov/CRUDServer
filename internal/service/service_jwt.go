@@ -23,7 +23,7 @@ func (s *Service) Authentication(ctx context.Context, id string, password string
 	}
 	authUser.Password = password
 
-	return CreateJWT(s.rps, &authUser, ctx)
+	return s.CreateJWT(s.rps, &authUser, ctx)
 }
 
 func (s *Service) RefreshToken(ctx context.Context, refreshTokenString string) (string, string, error) { //refresh our tokens
@@ -48,10 +48,10 @@ func (s *Service) RefreshToken(ctx context.Context, refreshTokenString string) (
 	if refreshTokenString != person.RefreshToken {
 		return "", "", fmt.Errorf("service: invalid refresh token")
 	}
-	return CreateJWT(s.rps, &person, ctx)
+	return s.CreateJWT(s.rps, &person, ctx)
 }
 
-func CreateJWT(rps repository.Repository, person *model.Person, ctx context.Context) (string, string, error) {
+func (s *Service) CreateJWT(rps repository.Repository, person *model.Person, ctx context.Context) (string, string, error) {
 	accessToken := jwt.New(jwt.SigningMethodHS256)          //encrypt access token by SigningMethodHS256 method
 	claimsA := accessToken.Claims.(jwt.MapClaims)           //fill access-token`s claims
 	claimsA["exp"] = time.Now().Add(5 * time.Minute).Unix() //work time
@@ -73,6 +73,10 @@ func CreateJWT(rps repository.Repository, person *model.Person, ctx context.Cont
 	if err != nil {
 		return "", "", fmt.Errorf("service: can't generate refresh token - %v", err)
 	}
+	err = s.userCache.AddToCache(ctx, person)
+	if err != nil {
+		return "", "", fmt.Errorf("service: can't add user into the cache - %v", err)
+	}
 	return accessTokenStr, refreshTokenStr, nil
 }
 
@@ -91,6 +95,7 @@ func (s *Service) Registration(ctx context.Context, person *model.Person) (strin
 	if err != nil {
 		return "", fmt.Errorf("service: registration failed: %v", err)
 	}
+
 	return newId, nil
 }
 
