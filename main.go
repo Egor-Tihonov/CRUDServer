@@ -1,6 +1,7 @@
 package main //main
 
 import (
+	_ "awesomeProject/docs"
 	"awesomeProject/internal/cache"
 	"awesomeProject/internal/handlers"
 	"awesomeProject/internal/middleware"
@@ -13,10 +14,21 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+//@title Trainee simple API
+//@version 1.0
+//@description API server for Trainee
+
+//@host localhost:8000
+//@BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @name Authorization
+// @in header
 var (
 	poolP *pgxpool.Pool
 	poolM *mongo.Client
@@ -26,9 +38,10 @@ func main() {
 	cfg := model.Config{}
 	err := env.Parse(&cfg)
 	if err != nil {
-		log.Fatalln("failed to start service, %e", err)
+		log.Fatalf("failed to start service, %e", err)
 	}
 	e := echo.New()
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	rdsClient := redisConnection(&cfg)
 	conn := DbConnection(&cfg)
 	defer func() {
@@ -55,9 +68,11 @@ func main() {
 	e.GET("/users/:id", h.GetUserById, middleware.IsAuthenticated)
 	e.GET("/refreshToken", h.RefreshToken, middleware.IsAuthenticated)
 	e.POST("/upload", h.Upload)
-	err = e.Start(":8080")
+
+	err = e.Start(":8000")
+
 	if err != nil {
-		log.Fatalln("failed to start service, %e", err)
+		log.Fatalf("failed to start service, %e", err)
 	}
 
 }

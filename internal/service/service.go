@@ -62,6 +62,13 @@ func (s *Service) GetAllUsersFromCache(ctx context.Context) ([]*model.Person, bo
 	return s.userCache.GetAllUsersFromCache(ctx)
 }
 func (s *Service) DeleteUserFromCache(ctx context.Context) error {
+	_, found, err := s.GetUserFromCache(ctx)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return nil
+	}
 	return s.userCache.DeleteUserFromCache(ctx)
 }
 func (s *Service) AddUsersToCache(person []*model.Person, ctx context.Context) error {

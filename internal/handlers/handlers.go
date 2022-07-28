@@ -76,6 +76,17 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, users)
 }
+
+// GetUserById godoc
+// @Summary     GetUserById
+// @Description GetOrderByID is echo handler(GET) which returns json structure of User object
+// @Accept json
+// @Produce json
+// @Tags        orders
+// @Param       id  path     string true "Account ID"
+// @Success     200
+// @Router      /users/{id} [get]
+// @Security    ApiKeyAuth
 func (h *Handler) GetUserById(c echo.Context) error {
 	id := c.Param("id")
 	err := ValidateValueID(id)

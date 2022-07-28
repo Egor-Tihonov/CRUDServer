@@ -2,10 +2,10 @@ package model
 
 type Person struct { //person
 	ID           string `bson,json:"id"`
-	Name         string `bson,json:"name" validate:"required,min=6"`
+	Name         string `bson,json:"name"`
 	Works        bool   `bson,json:"works"`
-	Age          int    `bson,json:"age" validate:"required,gte=0,lte:200"`
-	Password     string `bson,json:"password" validate:"required, min=8"`
+	Age          int    `bson,json:"age"`
+	Password     string `bson,json:"password"`
 	RefreshToken string `bson,json:"refreshToken"`
 }
 type Authentication struct {
@@ -25,5 +25,5 @@ type Config struct {
 	Password      string `env:"PASSWORD"`
 	PostgresDbUrl string `env:"POSTGRES_DB_URL"`
 	MongoDbUrl    string `env:"MONGO_DB_URL"`
-	RedisURL      string `env:"REDIS_DB_URL" env:"localhost:6379"`
+	RedisURL      string `env:"REDIS_DB_URL" envDefault:"localhost:6379"`
 }

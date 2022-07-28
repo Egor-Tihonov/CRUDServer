@@ -1,6 +1,7 @@
 package service
 
 import (
+	"awesomeProject/internal/cache"
 	"awesomeProject/internal/model"
 	"awesomeProject/internal/repository"
 	"context"
@@ -35,7 +36,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_Authentication(t *testing.T) {
-	rps := NewService(&repository.PRepository{Pool: Pool})
+	rps := NewService(&repository.PRepository{Pool: Pool}, &cache.UserCache{})
 	h := NewHandler(rps)
 	_, _, err := h.s.Authentication(context.Background(), "a20fc586-d9d2-4969-909f-d00bf42aa88a", "tujh2004")
 	require.NoError(t, err, "passwords dont match")
@@ -56,7 +57,7 @@ func TestHashPassword(t *testing.T) {
 }
 
 func TestService_Registration(t *testing.T) {
-	rps := NewService(&repository.PRepository{Pool: Pool})
+	rps := NewService(&repository.PRepository{Pool: Pool}, &cache.UserCache{})
 	h := NewHandler(rps)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -69,7 +70,7 @@ func TestService_Registration(t *testing.T) {
 }
 
 func TestService_RefreshToken(t *testing.T) {
-	rps := NewService(&repository.PRepository{Pool: Pool})
+	rps := NewService(&repository.PRepository{Pool: Pool}, &cache.UserCache{})
 	h := NewHandler(rps)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -96,12 +97,12 @@ func TestCreateJWT(t *testing.T) {
 		Age:      120,
 		Password: "tujh2004",
 	}
-	s := NewService(&repository.PRepository{Pool: Pool})
+	s := NewService(&repository.PRepository{Pool: Pool}, &cache.UserCache{})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	_, _, err := CreateJWT(s.rps, &testUser, ctx)
+	_, _, err := s.CreateJWT(s.rps, &testUser, ctx)
 	require.NoError(t, err, "cannot create tokens")
-	_, _, err = CreateJWT(s.rps, &testUserNoValidate, ctx)
+	_, _, err = s.CreateJWT(s.rps, &testUserNoValidate, ctx)
 	require.Error(t, err, "tokens create")
 
 }
