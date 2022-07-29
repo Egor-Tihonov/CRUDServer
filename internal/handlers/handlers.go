@@ -7,31 +7,40 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
-	"io/ioutil"
+	"github.com/labstack/gommon/log"
+	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
 
 var validate = validator.New()
 
-type Handler struct { //handler
+type Handler struct { // handler
 	s *service.Service
 }
 
-//NewHandler :define new handlers
-func NewHandler(NewS *service.Service) *Handler {
-	return &Handler{s: NewS}
+// NewHandler :define new handlers
+func NewHandler(newS *service.Service) *Handler {
+	return &Handler{s: newS}
 }
 
-//UpdateUser handler:
+// UpdateUser godoc
+// @Summary     UpdateUser
+// @Description UpdateUser is echo handler which delete user from cache and db
+// @Param       id  path string true "Account ID"
+// @Produce     string
+// @Tags        User
+// @Router      /users/{id} [delete]
+// @Failure     500 string
+// @Success     200 string
 func (h *Handler) UpdateUser(c echo.Context) error {
 	person := model.Person{}
 	id := c.Param("id")
 	err := ValidateValueID(id)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 	err = json.NewDecoder(c.Request().Body).Decode(&person)
 	if err != nil {
@@ -40,11 +49,20 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	}
 	err = h.s.UpdateUser(c.Request().Context(), id, &person)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("%v", err))
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, "Ok")
+	return c.String(http.StatusOK, "Ok")
 }
 
+// DeleteUser godoc
+// @Summary     DeleteUser
+// @Description DeleteUser is echo handler which delete user from cache and db
+// @Param       id path string true "Account ID"
+// @Produce     string
+// @Tags        User
+// @Router      /users/{id} [delete]
+// @Failure     500 json
+// @Success     200 string
 func (h *Handler) DeleteUser(c echo.Context) error {
 	id := c.Param("id")
 	err := ValidateValueID(id)
@@ -55,59 +73,48 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	err = h.s.DeleteUserFromCache(c.Request().Context())
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
-	}
-	return c.JSON(http.StatusOK, "")
+	return c.String(http.StatusOK, "delete")
 }
 
+// GetAllUsers godoc
+// @Summary     GetAllUsers
+// @Description GetAllUsers is echo handler which returns json structure of Users objects
+// @Produce     json
+// @Tags        User
+// @Router      /users [get]
+// @Failure     500 json
+// @Success     200 json
 func (h *Handler) GetAllUsers(c echo.Context) error {
-	users, found, err := h.s.GetAllUsersFromCache(c.Request().Context())
+	p, err := h.s.SelectAllUsers(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	if !found {
-		p, err := h.s.SelectAllUsers(c.Request().Context())
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err)
-		}
-		return c.JSON(http.StatusOK, p)
-	}
-	return c.JSON(http.StatusOK, users)
+	return c.JSON(http.StatusOK, p)
 }
 
-// GetUserById godoc
-// @Summary     GetUserById
-// @Description GetOrderByID is echo handler(GET) which returns json structure of User object
-// @Accept json
-// @Produce json
-// @Tags        orders
-// @Param       id  path     string true "Account ID"
-// @Success     200
+// GetUserByID godoc
+// @Summary     GetUserByID
+// @Description GetUserByID is echo handler which returns json structure of User object
+// @Produce     json
+// @Tags        User
+// @Param       id path string true "Account ID"
+// @Success     200 json
+// @Failure     500 json
 // @Router      /users/{id} [get]
 // @Security    ApiKeyAuth
-func (h *Handler) GetUserById(c echo.Context) error {
+func (h *Handler) GetUserByID(c echo.Context) error {
 	id := c.Param("id")
 	err := ValidateValueID(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	user, found, err := h.s.GetUserFromCache(c.Request().Context())
+	person, err := h.s.GetUserByID(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	if !found {
-		person, err := h.s.GetUserById(c.Request().Context(), id)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err)
-		}
-
-		return c.JSON(http.StatusOK, person)
-	}
-	return c.JSON(http.StatusOK, user)
-
+	return c.JSON(http.StatusOK, person)
 }
+
 func (h *Handler) DownloadFile(c echo.Context) error {
 	filename := c.QueryString()
 	err := c.Attachment(filename, "new_txt_file.txt")
@@ -126,13 +133,14 @@ func (h *Handler) Upload(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	fileByte, err := ioutil.ReadAll(src)
+	fileByte, err := io.ReadAll(src)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 	fileType = http.DetectContentType(fileByte)
-	fileName = "uploads/" + strconv.FormatInt(time.Now().Unix(), 10) + ".jpg"
-	err = ioutil.WriteFile(fileName, fileByte, 0777)
+	a := 5
+	fileName = "uploads/" + strconv.FormatInt(time.Now().Unix(), a) + ".jpg"
+	err = os.WriteFile(fileName, fileByte, 0600)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}

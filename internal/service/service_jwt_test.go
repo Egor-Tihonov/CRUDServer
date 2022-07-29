@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-type Handler struct { //handler
+type Handler struct { // handler
 	s *Service
 }
 
@@ -20,9 +20,9 @@ var (
 	Pool *pgxpool.Pool
 )
 
-//NewHandler :define new handlers
-func NewHandler(NewS *Service) *Handler {
-	return &Handler{s: NewS}
+// NewHandler :define new handlers
+func NewHandler(newS *Service) *Handler {
+	return &Handler{s: newS}
 }
 
 func TestMain(m *testing.M) {
@@ -44,7 +44,6 @@ func TestService_Authentication(t *testing.T) {
 	require.Error(t, err, "passwords dont match")
 	_, _, err = h.s.Authentication(context.Background(), "a20fc586-d9d2", "tujh2005")
 	require.Error(t, err, "passwords dont match or this user doesnt exist")
-
 }
 func TestHashPassword(t *testing.T) {
 	testNoValidData := []string{"", " "}
@@ -104,5 +103,4 @@ func TestCreateJWT(t *testing.T) {
 	require.NoError(t, err, "cannot create tokens")
 	_, _, err = s.CreateJWT(s.rps, &testUserNoValidate, ctx)
 	require.Error(t, err, "tokens create")
-
 }

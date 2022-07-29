@@ -1,6 +1,7 @@
 package model
 
-type Person struct { //person
+// Person : struct for user
+type Person struct {
 	ID           string `bson,json:"id"`
 	Name         string `bson,json:"name"`
 	Works        bool   `bson,json:"works"`
@@ -8,6 +9,7 @@ type Person struct { //person
 	Password     string `bson,json:"password"`
 	RefreshToken string `bson,json:"refreshToken"`
 }
+
 type Authentication struct {
 	Password string `json:"password"`
 }
@@ -23,7 +25,7 @@ type Response struct {
 type Config struct {
 	CurrentDB     string `env:"CURRENT_DB" envDefault:"postgres"`
 	Password      string `env:"PASSWORD"`
-	PostgresDbUrl string `env:"POSTGRES_DB_URL"`
-	MongoDbUrl    string `env:"MONGO_DB_URL"`
+	PostgresDBURL string `env:"POSTGRES_DB_URL"`
+	MongoDBURL    string `env:"MONGO_DB_URL"`
 	RedisURL      string `env:"REDIS_DB_URL" envDefault:"localhost:6379"`
 }

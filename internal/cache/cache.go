@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-redis/redis/v9"
-	log "github.com/sirupsen/logrus"
+	"github.com/labstack/gommon/log"
 	"time"
 )
 
@@ -35,7 +35,7 @@ func (u *UserCache) AddToCache(ctx context.Context, person *model.Person) error 
 	return nil
 }
 
-func (u *UserCache) GetUserByIdFromCache(ctx context.Context) (model.Person, bool, error) {
+func (u *UserCache) GetUserByIDFromCache(ctx context.Context) (model.Person, bool, error) {
 	result, err := u.redisClient.XRead(ctx, &redis.XReadArgs{
 		Streams: []string{"user", "0"},
 		Count:   1,
