@@ -1,3 +1,4 @@
+// Package handlers : file contains operation with requests
 package handlers
 
 import (
@@ -5,19 +6,21 @@ import (
 	"awesomeProject/internal/service"
 	"encoding/json"
 	"fmt"
-	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
 	"io"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 var validate = validator.New()
 
-type Handler struct { // handler
+// Handler struct
+type Handler struct {
 	s *service.Service
 }
 
@@ -115,6 +118,7 @@ func (h *Handler) GetUserByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, person)
 }
 
+// DownloadFile download
 func (h *Handler) DownloadFile(c echo.Context) error {
 	filename := c.QueryString()
 	err := c.Attachment(filename, "new_txt_file.txt")
@@ -123,6 +127,8 @@ func (h *Handler) DownloadFile(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, nil)
 }
+
+// Upload upload
 func (h *Handler) Upload(c echo.Context) error {
 	var fileName, fileType string
 	file, err := c.FormFile("file")
@@ -138,9 +144,12 @@ func (h *Handler) Upload(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 	fileType = http.DetectContentType(fileByte)
-	a := 5
+	const (
+		a = 5
+		b = 0o0600
+	)
 	fileName = "uploads/" + strconv.FormatInt(time.Now().Unix(), a) + ".jpg"
-	err = os.WriteFile(fileName, fileByte, 0600)
+	err = os.WriteFile(fileName, fileByte, b)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
@@ -150,6 +159,8 @@ func (h *Handler) Upload(c echo.Context) error {
 		FileSize: file.Size,
 	})
 }
+
+// ValidateValueID validate id
 func ValidateValueID(id string) error {
 	err := validate.Var(id, "required")
 	if err != nil {

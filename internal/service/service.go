@@ -1,3 +1,4 @@
+// Package service : file contains server logic
 package service
 
 import (
@@ -8,28 +9,30 @@ import (
 	"fmt"
 )
 
-var JwtKey = []byte("super-key") // key fo generation and check tokens
+// JwtKey fo generation and check tokens
+var JwtKey = []byte("super-key")
 
-type Service struct { // Service new
+// Service struct
+type Service struct {
 	rps       repository.Repository
 	userCache *cache.UserCache
 }
 
+// NewService create new service connection
 func NewService(newRps repository.Repository, userCache *cache.UserCache) *Service { // create
 	return &Service{rps: newRps, userCache: userCache}
 }
 
+// UpdateUser update user in cache and DB
 func (s *Service) UpdateUser(ctx context.Context, id string, person *model.Person) error { // update user
 	err := s.rps.Update(ctx, id, person)
 	if err != nil {
 		return fmt.Errorf("failed to update users, %e", err)
 	}
-	err = s.userCache.AddToCache(ctx, person)
-	if err != nil {
-		return fmt.Errorf("failed to add update users into the cache, %e", err)
-	}
-	return nil
+	return s.userCache.AddToCache(ctx, person)
 }
+
+// SelectAllUsers get all users from DB or cache
 func (s *Service) SelectAllUsers(ctx context.Context) ([]*model.Person, error) { // get all users from DB without passwords and tokens
 	users, found, err := s.userCache.GetAllUsersFromCache(ctx)
 	if err != nil {
@@ -40,7 +43,7 @@ func (s *Service) SelectAllUsers(ctx context.Context) ([]*model.Person, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to select all users from db, %e", err)
 		}
-		err = s.userCache.AddAllUsersToCache(users, ctx)
+		err = s.userCache.AddAllUsersToCache(ctx, users)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add users into the cache, %e", err)
 		}
@@ -48,6 +51,8 @@ func (s *Service) SelectAllUsers(ctx context.Context) ([]*model.Person, error) {
 	}
 	return users, nil
 }
+
+// DeleteUser delete user by id from cache
 func (s *Service) DeleteUser(ctx context.Context, id string) error { // delete user from DB
 	_, found, err := s.userCache.GetUserByIDFromCache(ctx)
 	if err != nil {
@@ -60,12 +65,10 @@ func (s *Service) DeleteUser(ctx context.Context, id string) error { // delete u
 	if err != nil {
 		return fmt.Errorf("service: error while deleting user from cache, %e", err)
 	}
-	err = s.rps.Delete(ctx, id)
-	if err != nil {
-		return fmt.Errorf("service: error while deleting user from DB, %e", err)
-	}
-	return nil
+	return s.rps.Delete(ctx, id)
 }
+
+// GetUserByID get user by id from db or cache
 func (s *Service) GetUserByID(ctx context.Context, id string) (model.Person, error) { // get one user by id
 	user, found, err := s.userCache.GetUserByIDFromCache(ctx)
 	if err != nil {
@@ -85,6 +88,7 @@ func (s *Service) GetUserByID(ctx context.Context, id string) (model.Person, err
 	return user, nil
 }
 
+// DeleteFromCache delete user from cache
 func (s *Service) DeleteFromCache(ctx context.Context) error {
 	_, found, err := s.userCache.GetUserByIDFromCache(ctx)
 	if err != nil {
@@ -93,9 +97,5 @@ func (s *Service) DeleteFromCache(ctx context.Context) error {
 	if !found {
 		return nil
 	}
-	err = s.userCache.DeleteUserFromCache(ctx)
-	if err != nil {
-		return fmt.Errorf("service: error while deleting user from cache, %e", err)
-	}
-	return nil
+	return s.userCache.DeleteUserFromCache(ctx)
 }

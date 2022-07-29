@@ -1,9 +1,11 @@
+// Package repository : file contains operations with MongoDB
 package repository
 
 import (
 	"awesomeProject/internal/model"
 	"context"
 	"fmt"
+
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,6 +17,7 @@ type MRepository struct {
 	Pool *mongo.Client
 }
 
+// Create add new user to db
 func (m *MRepository) Create(ctx context.Context, person *model.Person) (string, error) {
 	if person.Age < 0 || person.Age > 180 {
 		return "", fmt.Errorf("mongo repository: error with create, age must be more then 0 and less then 180")
@@ -35,6 +38,7 @@ func (m *MRepository) Create(ctx context.Context, person *model.Person) (string,
 	return newID, nil
 }
 
+// Update update exist user
 func (m *MRepository) Update(ctx context.Context, id string, person *model.Person) error {
 	if person.Age < 0 || person.Age > 180 {
 		return fmt.Errorf("mongo repository: error with create, person`s age must be more then 0 and less then 180")
@@ -50,6 +54,8 @@ func (m *MRepository) Update(ctx context.Context, id string, person *model.Perso
 	}
 	return nil
 }
+
+// UpdateAuth add user refresh token
 func (m *MRepository) UpdateAuth(ctx context.Context, id, refreshToken string) error {
 	collection := m.Pool.Database("person").Collection("person")
 	_, err := collection.UpdateOne(ctx, bson.D{primitive.E{Key: "id", Value: id}}, bson.D{{Key: "$set", Value: bson.D{
@@ -61,6 +67,7 @@ func (m *MRepository) UpdateAuth(ctx context.Context, id, refreshToken string) e
 	return nil
 }
 
+// SelectAll take all users from db
 func (m *MRepository) SelectAll(ctx context.Context) ([]*model.Person, error) {
 	var users []*model.Person
 	collection := m.Pool.Database("person").Collection("person")
@@ -79,6 +86,7 @@ func (m *MRepository) SelectAll(ctx context.Context) ([]*model.Person, error) {
 	return users, nil
 }
 
+// Delete user from db
 func (m *MRepository) Delete(ctx context.Context, id string) error {
 	collection := m.Pool.Database("person").Collection("person")
 	_, err := collection.DeleteOne(ctx, bson.D{primitive.E{Key: "id", Value: id}})
@@ -88,6 +96,7 @@ func (m *MRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+// SelectByID select exist user from db by his id
 func (m *MRepository) SelectByID(ctx context.Context, id string) (model.Person, error) {
 	user := model.Person{}
 	collection := m.Pool.Database("person").Collection("person")
@@ -97,6 +106,8 @@ func (m *MRepository) SelectByID(ctx context.Context, id string) (model.Person, 
 	}
 	return user, nil
 }
+
+// SelectByIDAuth take from user his refresh token
 func (m *MRepository) SelectByIDAuth(ctx context.Context, id string) (model.Person, error) {
 	user := model.Person{}
 	collection := m.Pool.Database("person").Collection("person")

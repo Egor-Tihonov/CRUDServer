@@ -1,3 +1,4 @@
+// Package repository : file contains operations with all DBs
 package repository
 
 import (
@@ -5,6 +6,7 @@ import (
 	"context"
 )
 
+// Repository middleware
 type Repository interface {
 	Create(ctx context.Context, person *model.Person) (string, error)
 	UpdateAuth(ctx context.Context, id string, refreshToken string) error

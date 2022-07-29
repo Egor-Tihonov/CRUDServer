@@ -1,3 +1,4 @@
+// Package service : file contains server logic
 package service
 
 import (
@@ -5,10 +6,11 @@ import (
 	"awesomeProject/internal/repository"
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/gommon/log"
 	"golang.org/x/crypto/bcrypt"
-	"time"
 )
 
 var (
@@ -16,7 +18,8 @@ var (
 	refreshTokenWorkTime = time.Now().Add(time.Hour * 3).Unix()
 )
 
-func (s *Service) Authentication(ctx context.Context, id, password string) (accessTokenStr, refreshTokenStr string, err error) { // Authentication
+// Authentication login in account
+func (s *Service) Authentication(ctx context.Context, id, password string) (accessTokenStr, refreshTokenStr string, err error) {
 	authUser, err := s.rps.SelectByID(ctx, id)
 	if err != nil {
 		return "", "", fmt.Errorf("service: authentication failed - %v", err)
@@ -29,9 +32,10 @@ func (s *Service) Authentication(ctx context.Context, id, password string) (acce
 	}
 	authUser.Password = password
 
-	return s.CreateJWT(s.rps, &authUser, ctx)
+	return s.CreateJWT(ctx, s.rps, &authUser)
 }
 
+// RefreshToken refresh jwt tokens
 func (s *Service) RefreshToken(ctx context.Context, refreshTokenString string) (accessTokenStr, refreshTokenStr string, err error) { // refresh our tokens
 	refreshToken, err := jwt.Parse(refreshTokenString, func(t *jwt.Token) (interface{}, error) {
 		return JwtKey, nil
@@ -55,10 +59,11 @@ func (s *Service) RefreshToken(ctx context.Context, refreshTokenString string) (
 	if refreshTokenString != person.RefreshToken {
 		return "", "", fmt.Errorf("service: invalid refresh token")
 	}
-	return s.CreateJWT(s.rps, &person, ctx)
+	return s.CreateJWT(ctx, s.rps, &person)
 }
 
-func (s *Service) CreateJWT(rps repository.Repository, person *model.Person, ctx context.Context) (accessTokenStr, refreshTokenStr string, err error) {
+// CreateJWT create jwt tokens
+func (s *Service) CreateJWT(ctx context.Context, rps repository.Repository, person *model.Person) (accessTokenStr, refreshTokenStr string, err error) {
 	accessToken := jwt.New(jwt.SigningMethodHS256)         // encrypt access token by SigningMethodHS256 method
 	claimsA := accessToken.Claims.(jwt.MapClaims)          // fill access-token`s claims
 	claimsA["exp"] = accessTokenWorkTime                   // work time
@@ -86,10 +91,12 @@ func (s *Service) CreateJWT(rps repository.Repository, person *model.Person, ctx
 	return
 }
 
-func (s *Service) UpdateUserAuth(ctx context.Context, id, refreshToken string) error { // add into user refresh token
+// UpdateUserAuth update auth user, add token
+func (s *Service) UpdateUserAuth(ctx context.Context, id, refreshToken string) error {
 	return s.rps.UpdateAuth(ctx, id, refreshToken)
 }
 
+// Registration create new account
 func (s *Service) Registration(ctx context.Context, person *model.Person) (string, error) { // users`s registration
 	hPassword, err := HashPassword(person.Password)
 	if err != nil {
@@ -104,6 +111,7 @@ func (s *Service) Registration(ctx context.Context, person *model.Person) (strin
 	return newID, nil
 }
 
+// HashPassword hash password
 func HashPassword(password string) (string, error) {
 	bytesPassword := []byte(password)
 	hashedBytesPassword, err := bcrypt.GenerateFromPassword(bytesPassword, bcrypt.DefaultCost)

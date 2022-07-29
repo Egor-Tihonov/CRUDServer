@@ -1,12 +1,14 @@
+// Package handlers : file contains operation with requests
 package handlers
 
 import (
 	"awesomeProject/internal/model"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
-	"net/http"
 )
 
 // Registration godoc
@@ -61,6 +63,7 @@ func (h *Handler) Authentication(c echo.Context) error {
 	return c.String(http.StatusOK, fmt.Sprintf("You_entry_with "+`{"refreshToken":%v,"accessToken" : %v}`, refreshToken, accessToken))
 }
 
+// RefreshToken refresh tokens
 func (h *Handler) RefreshToken(c echo.Context) error {
 	refreshToken := model.RefreshTokens{}
 	err := json.NewDecoder(c.Request().Body).Decode(&refreshToken)

@@ -5,11 +5,12 @@ import (
 	"awesomeProject/internal/model"
 	"awesomeProject/internal/repository"
 	"context"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/stretchr/testify/require"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/stretchr/testify/require"
 )
 
 type Handler struct { // handler
@@ -99,8 +100,8 @@ func TestCreateJWT(t *testing.T) {
 	s := NewService(&repository.PRepository{Pool: Pool}, &cache.UserCache{})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	_, _, err := s.CreateJWT(s.rps, &testUser, ctx)
+	_, _, err := s.CreateJWT(ctx, s.rps, &testUser)
 	require.NoError(t, err, "cannot create tokens")
-	_, _, err = s.CreateJWT(s.rps, &testUserNoValidate, ctx)
+	_, _, err = s.CreateJWT(ctx, s.rps, &testUserNoValidate)
 	require.Error(t, err, "tokens create")
 }

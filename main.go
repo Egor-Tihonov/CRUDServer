@@ -9,6 +9,7 @@ import (
 	"awesomeProject/internal/repository"
 	"awesomeProject/internal/service"
 	"context"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/go-redis/redis/v9"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -77,6 +78,7 @@ func main() {
 	}
 }
 
+// DBConnection create connection with db
 func DBConnection(cfg *model.Config) repository.Repository {
 	switch cfg.CurrentDB {
 	case "postgres":

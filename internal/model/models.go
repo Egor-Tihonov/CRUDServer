@@ -1,3 +1,4 @@
+// Package model File with structs
 package model
 
 // Person : struct for user
@@ -10,18 +11,24 @@ type Person struct {
 	RefreshToken string `bson,json:"refreshToken"`
 }
 
+// Authentication struct for parse it
 type Authentication struct {
 	Password string `json:"password"`
 }
+
+// RefreshTokens struct for parse it
 type RefreshTokens struct {
 	RefreshToken string `json:"refreshToken"`
 }
+
+// Response struct create response
 type Response struct {
 	Message  string
 	FileType string
 	FileSize int64
 }
 
+// Config struct create config
 type Config struct {
 	CurrentDB     string `env:"CURRENT_DB" envDefault:"postgres"`
 	Password      string `env:"PASSWORD"`
