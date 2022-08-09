@@ -1,22 +1,27 @@
+// Package cache : file contains operations with cache
 package cache
 
 import (
 	"awesomeProject/internal/model"
 	"context"
 	"encoding/json"
-	"github.com/go-redis/redis/v9"
-	log "github.com/sirupsen/logrus"
 	"time"
+
+	"github.com/go-redis/redis/v9"
+	"github.com/labstack/gommon/log"
 )
 
+// UserCache struct for cache
 type UserCache struct {
 	redisClient *redis.Client
 }
 
+// NewCache create new redis connection
 func NewCache(rdsClient *redis.Client) *UserCache {
 	return &UserCache{redisClient: rdsClient}
 }
 
+// AddToCache add user to cache
 func (u *UserCache) AddToCache(ctx context.Context, person *model.Person) error {
 	user, err := json.Marshal(person)
 	if err != nil {
@@ -35,7 +40,8 @@ func (u *UserCache) AddToCache(ctx context.Context, person *model.Person) error 
 	return nil
 }
 
-func (u *UserCache) GetUserByIdFromCache(ctx context.Context) (model.Person, bool, error) {
+// GetUserByIDFromCache get user from cache
+func (u *UserCache) GetUserByIDFromCache(ctx context.Context) (model.Person, bool, error) {
 	result, err := u.redisClient.XRead(ctx, &redis.XReadArgs{
 		Streams: []string{"user", "0"},
 		Count:   1,
@@ -59,8 +65,17 @@ func (u *UserCache) GetUserByIdFromCache(ctx context.Context) (model.Person, boo
 	}
 	return person, true, nil
 }
+
+// DeleteUserFromCache delete user from cache
 func (u *UserCache) DeleteUserFromCache(ctx context.Context) error {
-	err := u.redisClient.FlushAll(ctx).Err()
+	_, found, err := u.GetUserByIDFromCache(ctx)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return nil
+	}
+	err = u.redisClient.FlushAll(ctx).Err()
 	if err != nil {
 		log.Errorf("failed to delete user from cache, %e", err)
 		return err
@@ -68,6 +83,7 @@ func (u *UserCache) DeleteUserFromCache(ctx context.Context) error {
 	return nil
 }
 
+// GetAllUsersFromCache get all users from cache
 func (u *UserCache) GetAllUsersFromCache(ctx context.Context) ([]*model.Person, bool, error) {
 	result, err := u.redisClient.XRead(ctx, &redis.XReadArgs{
 		Streams: []string{"all-users", "0"},
@@ -94,7 +110,9 @@ func (u *UserCache) GetAllUsersFromCache(ctx context.Context) ([]*model.Person, 
 
 	return persons, true, nil
 }
-func (u *UserCache) AddAllUsersToCache(person []*model.Person, ctx context.Context) error {
+
+// AddAllUsersToCache add all users from db to cache
+func (u *UserCache) AddAllUsersToCache(ctx context.Context, person []*model.Person) error {
 	user, err := json.Marshal(person)
 	if err != nil {
 		log.Errorf("cache: failed add all users to cache, %e", err)

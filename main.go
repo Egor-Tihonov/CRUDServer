@@ -1,4 +1,4 @@
-package main //main
+package main
 
 import (
 	_ "awesomeProject/docs"
@@ -14,22 +14,23 @@ import (
 	"github.com/go-redis/redis/v9"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
+	"github.com/labstack/gommon/log"
+	"github.com/sirupsen/logrus"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-//@title Trainee simple API
-//@version 1.0
-//@description API server for Trainee
+// @title Trainee simple API
+// @version 1.0
+// @description API server for Trainee
 
-//@host localhost:8000
-//@BasePath /
+// @host localhost:8000
+// @BasePath /
 
 // @securityDefinitions.apikey ApiKeyAuth
-// @name Authorization
-// @in header
+// @name                       Authorization
+// @in                         bearer
 var (
 	poolP *pgxpool.Pool
 	poolM *mongo.Client
@@ -44,9 +45,9 @@ func main() {
 	e := echo.New()
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	rdsClient := redisConnection(&cfg)
-	conn := DbConnection(&cfg)
+	conn := DBConnection(&cfg)
 	defer func() {
-		err := rdsClient.Close()
+		err = rdsClient.Close()
 		if err != nil {
 			log.Errorf("error while closing redis connection - %v", err)
 		}
@@ -66,19 +67,19 @@ func main() {
 	e.DELETE("/usersDelete/:id", h.DeleteUser, middleware.IsAuthenticated)
 	e.POST("/login/:id", h.Authentication)
 	e.POST("/logout/:id", h.Logout, middleware.IsAuthenticated)
-	e.GET("/users/:id", h.GetUserById, middleware.IsAuthenticated)
+	e.GET("/users/:id", h.GetUserByID, middleware.IsAuthenticated)
 	e.GET("/refreshToken", h.RefreshToken, middleware.IsAuthenticated)
 	e.POST("/upload", h.Upload)
 
 	err = e.Start(":8000")
 
 	if err != nil {
-		log.Fatalf("failed to start service, %e", err)
+		defer log.Fatalf("failed to start service, %e", err)
 	}
-
 }
 
-func DbConnection(cfg *model.Config) repository.Repository {
+// DBConnection create connection with db
+func DBConnection(cfg *model.Config) repository.Repository {
 	switch cfg.CurrentDB {
 	case "postgres":
 		poolP, err := pgxpool.Connect(context.Background() /*cfg.PostgresDbUrl */, "postgresql://postgres:123@localhost:5432/person")
@@ -89,13 +90,12 @@ func DbConnection(cfg *model.Config) repository.Repository {
 		return &repository.PRepository{Pool: poolP}
 
 	case "mongo":
-		poolM, err := mongo.Connect(context.Background(), options.Client().ApplyURI(cfg.MongoDbUrl /*"mongodb://127.0.0.1:27017"*/))
+		poolM, err := mongo.Connect(context.Background(), options.Client().ApplyURI(cfg.MongoDBURL /*"mongodb://127.0.0.1:27017"*/))
 		if err != nil {
 			log.Errorf("bad connection with mongoDb: %v", err)
 			return nil
 		}
 		return &repository.MRepository{Pool: poolM}
-
 	}
 	return nil
 }
@@ -107,13 +107,14 @@ func redisConnection(cfg *model.Config) *redis.Client {
 	})
 	_, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
-		log.WithFields(log.Fields{
+		logrus.WithFields(logrus.Fields{
 			"status": "connection to redis is failed",
 			"err":    err,
 		})
 		return nil
 	}
-	log.WithFields(log.Fields{
+
+	logrus.WithFields(logrus.Fields{
 		"status": "connection with redis was success",
 	})
 	return rdb

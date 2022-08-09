@@ -2,24 +2,25 @@ package repository
 
 import (
 	"awesomeProject/internal/model"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/net/context"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/net/context"
 )
 
 var (
 	Pool *pgxpool.Pool
 )
 
-type Service struct { //service new
+type Service struct { // Service new
 	rps Repository
 }
 
-func NewService(NewRps Repository) *Service { //create
-	return &Service{rps: NewRps}
+func NewService(newRps Repository) *Service { // create
+	return &Service{rps: newRps}
 }
 
 func TestMain(m *testing.M) {
@@ -33,7 +34,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreate(t *testing.T) {
-	testValidData := []model.Person{
+	testValidData := []*model.Person{
 		{
 			Name:     "Ivan",
 			Works:    true,
@@ -47,7 +48,7 @@ func TestCreate(t *testing.T) {
 			Password: "1",
 		},
 	}
-	testNoValidData := []model.Person{
+	testNoValidData := []*model.Person{
 		{
 			Name:     "Ivan",
 			Works:    false,
@@ -71,11 +72,11 @@ func TestCreate(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for _, p := range testValidData {
-		_, err := rps.rps.Create(ctx, &p)
+		_, err := rps.rps.Create(ctx, p)
 		require.NoError(t, err, "create error")
 	}
 	for _, p := range testNoValidData {
-		_, err := rps.rps.Create(ctx, &p)
+		_, err := rps.rps.Create(ctx, p)
 		require.Error(t, err, "create error")
 	}
 }
@@ -100,18 +101,17 @@ func TestSelectAll(t *testing.T) {
 	require.NoError(t, err, "select all: insert error")
 	users, err = rps.rps.SelectAll(ctx)
 	if err != nil {
-		log.Fatalf("error with select all: %v", err)
+		defer log.Fatalf("error with select all: %v", err)
 	}
 	require.NotEqual(t, 5, len(users), "select all: the values are equals")
-
 }
 
 func TestSelectById(t *testing.T) {
 	rps := NewService(&PRepository{Pool: Pool})
 	ctx, cancel := context.WithCancel(context.Background())
-	_, err := rps.rps.SelectById(ctx, "12")
+	_, err := rps.rps.SelectByID(ctx, "12")
 	require.NoError(t, err, "select user by id: this id dont exist")
-	_, err = rps.rps.SelectById(ctx, "20")
+	_, err = rps.rps.SelectByID(ctx, "20")
 	require.Error(t, err, "select user by id: this id already exist")
 	cancel()
 }
@@ -121,7 +121,7 @@ func TestUpdate(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	testValidData := []model.Person{
+	testValidData := []*model.Person{
 		{
 			Name:  "Masha",
 			Works: true,
@@ -133,7 +133,7 @@ func TestUpdate(t *testing.T) {
 			Age:   19,
 		},
 	}
-	testNoValidData := []model.Person{
+	testNoValidData := []*model.Person{
 		{
 			Name:  "Egor",
 			Works: false,
@@ -151,34 +151,34 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 	for _, p := range testValidData {
-		err := rps.rps.Update(ctx, "25a64c4c-139f-4303-a83d-f31095a114af", &p)
+		err := rps.rps.Update(ctx, "25a64c4c-139f-4303-a83d-f31095a114af", p)
 		require.NoError(t, err, "update error")
 	}
 	for _, p := range testNoValidData {
-		err := rps.rps.Update(ctx, "bb839db7-4be3-41a8-a53b-403ad26593ca", &p)
+		err := rps.rps.Update(ctx, "bb839db7-4be3-41a8-a53b-403ad26593ca", p)
 		require.Error(t, err, "update error")
 	}
-	err := rps.rps.Update(ctx, "bb839db7-4be3-41a8-a53b-403ad26593ca", &testValidData[0])
+	err := rps.rps.Update(ctx, "bb839db7-4be3-41a8-a53b-403ad26593ca", testValidData[0])
 	require.Error(t, err, "update error")
-
 }
 func TestPRepository_UpdateAuth(t *testing.T) {
 	rps := NewService(&PRepository{Pool: Pool})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err := rps.rps.UpdateAuth(ctx, "25a64c4c-139f-4303-a83d-f31095a114af", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTg0OTk0NzgsImp0aSI6IjNhZjYyMjY5LTAxZmYtNGM2YS04MmUwLTBhNjIwZTVlY2ZmZCIsInVzZXJuYW1lIjoiRWdvclRpaG9ub3YifQ.d4kAjYeGkObPF-kcm7TaFRducO7rsUjabu_8h-Sy8ZE")
+	err := rps.rps.UpdateAuth(ctx, "25a64c4c-139f-4303-a83d-f31095a114af",
+		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTg0OTk0NzgsImp0aSI6IjNhZjYyMjY5LTAxZmYtNGM2YS04MmUwLTBhNjIwZTVlY2ZmZCIsInVzZXJuYW1lIjoiRWdvclRpaG9ub3YifQ.d4kAjYeGkObPF-kcm7TaFRducO7rsUjabu_8h-Sy8ZE")
 	require.NoError(t, err, "thereis an error")
-	err = rps.rps.UpdateAuth(ctx, "3", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTg0OTk0NzgsImp0aSI6IjNhZjYyMjY5LTAxZmYtNGM2YS04MmUwLTBhNjIwZTVlY2ZmZCIsInVzZXJuYW1lIjoiRWdvclRpaG9ub3YifQ.d4kAjYeGkObPF-kcm7TaFRducO7rsUjabu_8h-Sy8ZE")
+	err = rps.rps.UpdateAuth(ctx, "3",
+		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTg0OTk0NzgsImp0aSI6IjNhZjYyMjY5LTAxZmYtNGM2YS04MmUwLTBhNjIwZTVlY2ZmZCIsInVzZXJuYW1lIjoiRWdvclRpaG9ub3YifQ.d4kAjYeGkObPF-kcm7TaFRducO7rsUjabu_8h-Sy8ZE")
 	require.Error(t, err, "there isnt an error")
-
 }
 func TestPRepository_SelectByIdAuth(t *testing.T) {
 	rps := NewService(&PRepository{Pool: Pool})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	_, err := rps.rps.SelectByIdAuth(ctx, "25a64c4c-139f-4303-a83d-f31095a114af")
+	_, err := rps.rps.SelectByIDAuth(ctx, "25a64c4c-139f-4303-a83d-f31095a114af")
 	require.NoError(t, err, "there is an error")
-	_, err = rps.rps.SelectByIdAuth(ctx, "3")
+	_, err = rps.rps.SelectByIDAuth(ctx, "3")
 	require.Error(t, err, "there isn`t an error")
 }
 
@@ -186,8 +186,8 @@ func TestPRepository_Delete(t *testing.T) {
 	rps := NewService(&PRepository{Pool: Pool})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	_, err := rps.rps.SelectByIdAuth(ctx, "25a64c4c-139f-4303-a83d-f31095a114af")
+	_, err := rps.rps.SelectByIDAuth(ctx, "25a64c4c-139f-4303-a83d-f31095a114af")
 	require.NoError(t, err, "there is an error")
-	_, err = rps.rps.SelectByIdAuth(ctx, "3")
+	_, err = rps.rps.SelectByIDAuth(ctx, "3")
 	require.Error(t, err, "there isn`t an error")
 }

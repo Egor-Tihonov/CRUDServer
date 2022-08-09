@@ -5,14 +5,15 @@ import (
 	"awesomeProject/internal/model"
 	"awesomeProject/internal/repository"
 	"context"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/stretchr/testify/require"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/stretchr/testify/require"
 )
 
-type Handler struct { //handler
+type Handler struct { // handler
 	s *Service
 }
 
@@ -20,9 +21,9 @@ var (
 	Pool *pgxpool.Pool
 )
 
-//NewHandler :define new handlers
-func NewHandler(NewS *Service) *Handler {
-	return &Handler{s: NewS}
+// NewHandler :define new handlers
+func NewHandler(newS *Service) *Handler {
+	return &Handler{s: newS}
 }
 
 func TestMain(m *testing.M) {
@@ -44,7 +45,6 @@ func TestService_Authentication(t *testing.T) {
 	require.Error(t, err, "passwords dont match")
 	_, _, err = h.s.Authentication(context.Background(), "a20fc586-d9d2", "tujh2005")
 	require.Error(t, err, "passwords dont match or this user doesnt exist")
-
 }
 func TestHashPassword(t *testing.T) {
 	testNoValidData := []string{"", " "}
@@ -100,9 +100,8 @@ func TestCreateJWT(t *testing.T) {
 	s := NewService(&repository.PRepository{Pool: Pool}, &cache.UserCache{})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	_, _, err := s.CreateJWT(s.rps, &testUser, ctx)
+	_, _, err := s.CreateJWT(ctx, s.rps, &testUser)
 	require.NoError(t, err, "cannot create tokens")
-	_, _, err = s.CreateJWT(s.rps, &testUserNoValidate, ctx)
+	_, _, err = s.CreateJWT(ctx, s.rps, &testUserNoValidate)
 	require.Error(t, err, "tokens create")
-
 }

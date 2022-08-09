@@ -1,27 +1,31 @@
+// Package repository : file contains operations with MongoDB
 package repository
 
 import (
 	"awesomeProject/internal/model"
 	"context"
 	"fmt"
+
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type MRepository struct { //mongo
+// MRepository create connection with MongoDB
+type MRepository struct {
 	Pool *mongo.Client
 }
 
+// Create add new user to db
 func (m *MRepository) Create(ctx context.Context, person *model.Person) (string, error) {
 	if person.Age < 0 || person.Age > 180 {
-		return "", error(fmt.Errorf("mongo repository: error with create, age must be more then 0 and less then 180"))
+		return "", fmt.Errorf("mongo repository: error with create, age must be more then 0 and less then 180")
 	}
-	newId := uuid.New().String()
+	newID := uuid.New().String()
 	collection := m.Pool.Database("person").Collection("person")
 	_, err := collection.InsertOne(ctx, bson.D{
-		{Key: "id", Value: newId},
+		{Key: "id", Value: newID},
 		{Key: "name", Value: person.Name},
 		{Key: "works", Value: person.Works},
 		{Key: "age", Value: person.Age},
@@ -31,12 +35,13 @@ func (m *MRepository) Create(ctx context.Context, person *model.Person) (string,
 	if err != nil {
 		return "", fmt.Errorf("mongo: unable to create new user: %v", err)
 	}
-	return newId, nil
+	return newID, nil
 }
 
+// Update update exist user
 func (m *MRepository) Update(ctx context.Context, id string, person *model.Person) error {
 	if person.Age < 0 || person.Age > 180 {
-		return error(fmt.Errorf("mongo repository: error with create, person`s age must be more then 0 and less then 180"))
+		return fmt.Errorf("mongo repository: error with create, person`s age must be more then 0 and less then 180")
 	}
 	collection := m.Pool.Database("person").Collection("person")
 	_, err := collection.UpdateOne(ctx, bson.D{primitive.E{Key: "id", Value: id}}, bson.D{{Key: "$set", Value: bson.D{
@@ -49,7 +54,9 @@ func (m *MRepository) Update(ctx context.Context, id string, person *model.Perso
 	}
 	return nil
 }
-func (m *MRepository) UpdateAuth(ctx context.Context, id string, refreshToken string) error {
+
+// UpdateAuth add user refresh token
+func (m *MRepository) UpdateAuth(ctx context.Context, id, refreshToken string) error {
 	collection := m.Pool.Database("person").Collection("person")
 	_, err := collection.UpdateOne(ctx, bson.D{primitive.E{Key: "id", Value: id}}, bson.D{{Key: "$set", Value: bson.D{
 		{Key: "refreshtoken", Value: refreshToken},
@@ -60,6 +67,7 @@ func (m *MRepository) UpdateAuth(ctx context.Context, id string, refreshToken st
 	return nil
 }
 
+// SelectAll take all users from db
 func (m *MRepository) SelectAll(ctx context.Context) ([]*model.Person, error) {
 	var users []*model.Person
 	collection := m.Pool.Database("person").Collection("person")
@@ -76,9 +84,9 @@ func (m *MRepository) SelectAll(ctx context.Context) ([]*model.Person, error) {
 		users = append(users, &user)
 	}
 	return users, nil
-
 }
 
+// Delete user from db
 func (m *MRepository) Delete(ctx context.Context, id string) error {
 	collection := m.Pool.Database("person").Collection("person")
 	_, err := collection.DeleteOne(ctx, bson.D{primitive.E{Key: "id", Value: id}})
@@ -88,7 +96,8 @@ func (m *MRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (m *MRepository) SelectById(ctx context.Context, id string) (model.Person, error) {
+// SelectByID select exist user from db by his id
+func (m *MRepository) SelectByID(ctx context.Context, id string) (model.Person, error) {
 	user := model.Person{}
 	collection := m.Pool.Database("person").Collection("person")
 	err := collection.FindOne(ctx, bson.D{primitive.E{Key: "id", Value: id}}).Decode(&user)
@@ -97,10 +106,17 @@ func (m *MRepository) SelectById(ctx context.Context, id string) (model.Person, 
 	}
 	return user, nil
 }
-func (m *MRepository) SelectByIdAuth(ctx context.Context, id string) (model.Person, error) {
+
+// SelectByIDAuth take from user his refresh token
+func (m *MRepository) SelectByIDAuth(ctx context.Context, id string) (model.Person, error) {
 	user := model.Person{}
 	collection := m.Pool.Database("person").Collection("person")
-	err := collection.FindOne(ctx, bson.D{primitive.E{Key: "id", Value: id}, {Key: "name", Value: 0}, {Key: "works", Value: 0}, {Key: "age", Value: 0}, {Key: "password", Value: 0}}).Decode(&user)
+	err := collection.FindOne(ctx, bson.D{primitive.E{Key: "id", Value: id},
+		{Key: "name", Value: 0},
+		{Key: "works", Value: 0},
+		{Key: "age", Value: 0},
+		{Key: "password", Value: 0},
+	}).Decode(&user)
 	if err != nil {
 		return user, err
 	}
